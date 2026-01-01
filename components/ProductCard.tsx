@@ -1,6 +1,6 @@
 import { View, Text, Image, TouchableOpacity } from "react-native";
 import React from "react";
-import { MaterialIcons } from "@expo/vector-icons";
+import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 
 interface Product {
   id: string;
@@ -19,42 +19,49 @@ interface ProductCardProps {
 export default function ProductCard({ product, onPress }: ProductCardProps) {
   return (
     <TouchableOpacity
+      activeOpacity={0.9}
       onPress={() => onPress(product)}
-      className="flex-1 m-2 bg-white dark:bg-slate-800 rounded-3xl p-3 shadow-lg shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-700"
+      className="flex-1 m-2 mb-4 bg-white dark:bg-slate-800 rounded-[24px] overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800"
     >
       {/* Image Container */}
-      <View className="w-full h-40 bg-slate-100 dark:bg-slate-700 rounded-2xl mb-3 overflow-hidden relative">
+      <View className="w-full h-48 bg-slate-100 dark:bg-slate-700 relative">
         <Image
           source={{ uri: product.image }}
-          className="w-full h-full object-cover"
+          className="w-full h-full"
           resizeMode="cover"
         />
-        <View className="absolute top-2 right-2 bg-white/80 dark:bg-black/50 backdrop-blur-md px-2 py-1 rounded-full flex-row items-center gap-1">
-          <MaterialIcons name="star" size={12} color="#F59E0B" />
+        {/* Rating Badge */}
+        <View className="absolute bottom-3 left-3 bg-white/90 dark:bg-black/70 px-2 py-1 rounded-full flex-row items-center gap-1 shadow-sm backdrop-blur-sm">
+          <MaterialIcons name="star" size={14} color="#F59E0B" />
           <Text className="text-xs font-bold text-slate-900 dark:text-white">
             {product.rating}
           </Text>
         </View>
+        {/* Favorite Button */}
+        <TouchableOpacity className="absolute top-3 right-3 bg-white/90 dark:bg-black/70 p-2 rounded-full shadow-sm backdrop-blur-sm">
+          <Ionicons name="heart-outline" size={20} color="#EF4444" />
+        </TouchableOpacity>
       </View>
 
       {/* Product Info */}
-      <View className="space-y-1">
+      <View className="p-4 space-y-2">
+        <Text className="text-xs font-bold text-indigo-500 uppercase tracking-widest">
+          {product.category}
+        </Text>
+        
         <Text
           numberOfLines={1}
-          className="text-lg font-bold text-slate-800 dark:text-slate-100"
+          className="text-lg font-bold text-slate-900 dark:text-white leading-tight"
         >
           {product.name}
         </Text>
-        <Text className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">
-          {product.category}
-        </Text>
 
-        <View className="flex-row items-center justify-between mt-2">
-          <Text className="text-indigo-600 dark:text-indigo-400 font-black text-lg">
+        <View className="flex-row items-center justify-between pt-2">
+          <Text className="text-xl font-black text-slate-900 dark:text-white">
             ${product.price}
           </Text>
-          <TouchableOpacity className="bg-indigo-600 p-2 rounded-full active:bg-indigo-700">
-            <MaterialIcons name="add" size={20} color="white" />
+          <TouchableOpacity className="bg-slate-900 dark:bg-white h-10 w-10 items-center justify-center rounded-full active:scale-95 transition-transform">
+            <MaterialIcons name="add" size={24} className="text-white dark:text-slate-900" />
           </TouchableOpacity>
         </View>
       </View>

@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, FlatList } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
 import ProductCard from '../components/ProductCard';
 import SearchBar from '../components/SearchBar';
 import CategoryFilter from '../components/CategoryFilter';
@@ -26,7 +27,7 @@ const PRODUCTS = [
   },
   {
     id: '3',
-    name: 'Smart Watch Series 7',
+    name: 'Smart Watch',
     price: 299.50,
     category: 'electronics',
     image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?q=80&w=1000&auto=format&fit=crop',
@@ -92,23 +93,30 @@ export default function ProductListingScreen() {
   }, [searchQuery, selectedCategory]);
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-50 dark:bg-slate-900">
-      <View className="flex-1 px-4 pt-2">
+    <SafeAreaView className="flex-1 bg-white dark:bg-slate-900">
+      <View className="flex-1 px-5 pt-2">
         {/* Header Section */}
-        <View className="mb-6">
-          <Text className="text-3xl font-black text-slate-900 dark:text-white mb-1">
-            Re<Text className="text-indigo-600">Mart</Text> Store
-          </Text>
-          <Text className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-            Find your favorite products
-          </Text>
+        <View className="flex-row justify-between items-start mb-6 mt-2">
+          <View>
+            <Text className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+              Discover
+            </Text>
+            <Text className="text-base text-slate-500 dark:text-slate-400 font-medium mt-1">
+              Find your perfect items
+            </Text>
+          </View>
+          
+          <TouchableOpacity className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-full items-center justify-center border border-slate-100 dark:border-slate-700 shadow-sm relative active:scale-95 transition-transform">
+            <Ionicons name="bag-outline" size={24} className="text-slate-900 dark:text-white" />
+            <View className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-slate-800" />
+          </TouchableOpacity>
         </View>
 
         {/* Search & Filter */}
         <SearchBar
           value={searchQuery}
           onChangeText={setSearchQuery}
-          onFilterPress={() => {}} // Could open extended filter modal
+          onFilterPress={() => {}} 
         />
         <CategoryFilter
           categories={CATEGORIES}
@@ -127,12 +135,13 @@ export default function ProductListingScreen() {
             />
           )}
           numColumns={2}
-          contentContainerStyle={{ paddingBottom: 20 }}
+          contentContainerStyle={{ paddingBottom: 100 }}
           columnWrapperStyle={{ justifyContent: 'space-between' }}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center py-20">
-              <Text className="text-slate-400 text-lg">No products found</Text>
+              <Ionicons name="search-outline" size={64} color="#CBD5E1" />
+              <Text className="text-slate-400 text-lg font-medium mt-4">No products found</Text>
             </View>
           }
         />
