@@ -9,30 +9,30 @@ interface CategoryFilterProps {
 
 export default function CategoryFilter({ categories, selectedCategory, onSelectCategory }: CategoryFilterProps) {
   return (
-    <View className="mb-8">
+    <View className="mb-6">
       <ScrollView 
         horizontal 
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 8, paddingHorizontal: 4 }}
+        contentContainerStyle={{ gap: 12, paddingHorizontal: 4 }}
       >
         {categories.map((category, index) => {
           const isSelected = selectedCategory === category;
           return (
             <TouchableOpacity
-              activeOpacity={0.8}
+              activeOpacity={0.7}
               key={index}
               onPress={() => onSelectCategory(category)}
-              className={`px-6 py-3 rounded-full border ${
+              className={`px-5 py-2.5 rounded-full border shadow-sm ${
                 isSelected 
-                  ? 'bg-slate-900 border-slate-900 dark:bg-white dark:border-white' 
-                  : 'bg-transparent border-slate-200 dark:border-slate-700'
+                  ? 'bg-indigo-600 border-indigo-600' 
+                  : 'bg-white border-slate-200 dark:bg-slate-800 dark:border-slate-700'
               }`}
             >
               <Text 
-                className={`font-bold text-sm capitalize ${
+                className={`font-outfit-medium text-sm capitalize ${
                   isSelected 
-                    ? 'text-white dark:text-slate-900' 
-                    : 'text-slate-500 dark:text-slate-400'
+                    ? 'text-white' 
+                    : 'text-slate-600 dark:text-slate-300'
                 }`}
               >
                 {category}
