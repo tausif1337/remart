@@ -197,13 +197,14 @@ export default function ProductListingScreen() {
     <SafeAreaView className="flex-1 bg-slate-50 dark:bg-slate-950">
       <View className="flex-1 w-full max-w-7xl self-center" style={{ paddingHorizontal: contentPadding }}>
         {/* Header Section */}
+        {/* Header Section */}
         <View className="flex-row justify-between items-center mb-8 mt-4">
           <View>
-            <Text className="text-sm font-outfit-bold text-indigo-500 uppercase tracking-wider mb-1">
-              New Collection
+            <Text className="text-sm font-outfit-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+              Welcome to
             </Text>
-            <Text className="text-3xl font-outfit-black text-slate-900 dark:text-white tracking-tight">
-              Best Sellers
+            <Text className="text-4xl font-outfit-black text-indigo-600 dark:text-indigo-400 tracking-tight">
+              Remart
             </Text>
           </View>
           
