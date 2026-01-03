@@ -39,9 +39,7 @@ export default function ProductCard({ product, onPress }: ProductCardProps) {
         </View>
 
         {/* Favorite Button - Glassmorphism */}
-        <TouchableOpacity
-          className="absolute top-3 right-3 w-8 h-8 bg-white/90 dark:bg-black/60 rounded-full items-center justify-center"
-        >
+        <TouchableOpacity className="absolute top-3 right-3 w-8 h-8 bg-white/90 dark:bg-black/60 rounded-full items-center justify-center">
           <Feather name="heart" size={16} color="#EF4444" />
         </TouchableOpacity>
       </View>
@@ -67,9 +65,7 @@ export default function ProductCard({ product, onPress }: ProductCardProps) {
             ${product.price}
           </Text>
 
-          <TouchableOpacity
-            className="bg-slate-900 dark:bg-white w-8 h-8 items-center justify-center rounded-full"
-          >
+          <TouchableOpacity className="bg-slate-900 dark:bg-white w-8 h-8 items-center justify-center rounded-full">
             <Feather name="plus" size={18} color="#FFFFFF" />
           </TouchableOpacity>
         </View>

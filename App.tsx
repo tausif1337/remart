@@ -7,7 +7,7 @@ import {
   Outfit_400Regular,
   Outfit_500Medium,
   Outfit_700Bold,
-  Outfit_900Black
+  Outfit_900Black,
 } from "@expo-google-fonts/outfit";
 import AppNavigator from "./navigation/AppNavigator";
 
@@ -21,9 +21,18 @@ export default function App() {
 
   if (!fontsLoaded) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#F8FAFC" }}>
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#F8FAFC",
+        }}
+      >
         <ActivityIndicator size="large" color="#4F46E5" />
-        <Text style={{ marginTop: 20, color: "#64748B", fontFamily: "System" }}>Loading App...</Text>
+        <Text style={{ marginTop: 20, color: "#64748B", fontFamily: "System" }}>
+          Loading App...
+        </Text>
       </View>
     );
   }

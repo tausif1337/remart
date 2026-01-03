@@ -1,6 +1,6 @@
-import { View, TextInput, TouchableOpacity } from 'react-native';
-import React from 'react';
-import { Feather } from '@expo/vector-icons';
+import { View, TextInput, TouchableOpacity } from "react-native";
+import React from "react";
+import { Feather } from "@expo/vector-icons";
 
 interface SearchBarProps {
   value: string;
@@ -8,7 +8,11 @@ interface SearchBarProps {
   onFilterPress?: () => void;
 }
 
-export default function SearchBar({ value, onChangeText, onFilterPress }: SearchBarProps) {
+export default function SearchBar({
+  value,
+  onChangeText,
+  onFilterPress,
+}: SearchBarProps) {
   return (
     <View className="flex-row items-center mb-8">
       <View className="flex-1 flex-row items-center bg-white dark:bg-slate-800 rounded-2xl h-14 px-4 border border-slate-100 dark:border-slate-700">
@@ -21,7 +25,7 @@ export default function SearchBar({ value, onChangeText, onFilterPress }: Search
           className="flex-1 ml-3 text-base text-slate-900 dark:text-white font-outfit-medium h-full"
         />
         {value.length > 0 && (
-          <TouchableOpacity onPress={() => onChangeText('')}>
+          <TouchableOpacity onPress={() => onChangeText("")}>
             <Feather name="x-circle" size={18} color="#94A3B8" />
           </TouchableOpacity>
         )}
