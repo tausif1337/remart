@@ -1,15 +1,15 @@
 import "./global.css";
 import React from "react";
-import { View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator, Text } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { 
-  useFonts, 
-  Outfit_400Regular, 
-  Outfit_500Medium, 
-  Outfit_700Bold, 
-  Outfit_900Black 
+import {
+  useFonts,
+  Outfit_400Regular,
+  Outfit_500Medium,
+  Outfit_700Bold,
+  Outfit_900Black
 } from "@expo-google-fonts/outfit";
-import ProductListingScreen from "./screens/ProductListingScreen";
+import AppNavigator from "./navigation/AppNavigator";
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -21,15 +21,16 @@ export default function App() {
 
   if (!fontsLoaded) {
     return (
-      <View className="flex-1 items-center justify-center bg-slate-50 dark:bg-slate-950">
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#F8FAFC" }}>
         <ActivityIndicator size="large" color="#4F46E5" />
+        <Text style={{ marginTop: 20, color: "#64748B", fontFamily: "System" }}>Loading App...</Text>
       </View>
     );
   }
 
   return (
     <SafeAreaProvider>
-      <ProductListingScreen />
+      <AppNavigator />
     </SafeAreaProvider>
   );
 }

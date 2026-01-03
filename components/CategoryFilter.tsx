@@ -10,9 +10,9 @@ interface CategoryFilterProps {
 export default function CategoryFilter({ categories, selectedCategory, onSelectCategory }: CategoryFilterProps) {
   return (
     <View className="mb-6">
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
+      <ScrollView
+        horizontal={true}
+
         contentContainerStyle={{ gap: 12, paddingHorizontal: 4 }}
       >
         {categories.map((category, index) => {
@@ -22,18 +22,16 @@ export default function CategoryFilter({ categories, selectedCategory, onSelectC
               activeOpacity={0.7}
               key={index}
               onPress={() => onSelectCategory(category)}
-              className={`px-5 py-2.5 rounded-full border shadow-sm ${
-                isSelected 
-                  ? 'bg-indigo-600 border-indigo-600' 
-                  : 'bg-white border-slate-200 dark:bg-slate-800 dark:border-slate-700'
-              }`}
-            >
-              <Text 
-                className={`font-outfit-medium text-sm capitalize ${
-                  isSelected 
-                    ? 'text-white' 
-                    : 'text-slate-600 dark:text-slate-300'
+              className={`px-5 py-2.5 rounded-full border shadow-sm ${isSelected
+                ? 'bg-indigo-600 border-indigo-600'
+                : 'bg-white border-slate-200 dark:bg-slate-800 dark:border-slate-700'
                 }`}
+            >
+              <Text
+                className={`font-outfit-medium text-sm capitalize ${isSelected
+                  ? 'text-white'
+                  : 'text-slate-600 dark:text-slate-300'
+                  }`}
               >
                 {category}
               </Text>

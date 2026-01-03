@@ -20,7 +20,7 @@ export default function ProductCard({ product, onPress }: ProductCardProps) {
   return (
     <Pressable
       onPress={() => onPress(product)}
-      className="flex-1 m-2 mb-6 bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800"
+      className="flex-1 m-2 mb-6 bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800"
     >
       {/* Image Container */}
       <View className="w-full h-44 bg-slate-50 dark:bg-slate-800 relative justify-center items-center">
@@ -29,18 +29,18 @@ export default function ProductCard({ product, onPress }: ProductCardProps) {
           className="w-full h-full"
           resizeMode="cover"
         />
-        
+
         {/* Rating Badge - Floating effect */}
-        <View className="absolute top-3 left-3 bg-white/90 dark:bg-black/60 px-2.5 py-1.5 rounded-2xl flex-row items-center gap-1 shadow-sm backdrop-blur-md">
-          <Feather name="star" size={12} color="#F59E0B" fill="#F59E0B" />
+        <View className="absolute top-3 left-3 bg-white/90 dark:bg-black/60 px-2.5 py-1.5 rounded-2xl flex-row items-center gap-1 shadow-sm">
+          <Feather name="star" size={12} color="#F59E0B" />
           <Text className="text-xs font-outfit-bold text-slate-800 dark:text-white">
             {product.rating}
           </Text>
         </View>
 
         {/* Favorite Button - Glassmorphism */}
-        <TouchableOpacity 
-          className="absolute top-3 right-3 w-8 h-8 bg-white/90 dark:bg-black/60 rounded-full items-center justify-center shadow-sm backdrop-blur-md active:scale-90 transition-transform"
+        <TouchableOpacity
+          className="absolute top-3 right-3 w-8 h-8 bg-white/90 dark:bg-black/60 rounded-full items-center justify-center"
         >
           <Feather name="heart" size={16} color="#EF4444" />
         </TouchableOpacity>
@@ -50,7 +50,7 @@ export default function ProductCard({ product, onPress }: ProductCardProps) {
       <View className="p-4 pt-3">
         <View className="flex-row justify-between items-start">
           <View className="flex-1 mr-2">
-            <Text className="text-[10px] font-outfit-bold text-indigo-500 uppercase tracking-wider mb-1">
+            <Text className="text-[10px] font-outfit-bold text-indigo-500 uppercase mb-1">
               {product.category}
             </Text>
             <Text
@@ -66,11 +66,11 @@ export default function ProductCard({ product, onPress }: ProductCardProps) {
           <Text className="text-lg font-outfit-black text-slate-900 dark:text-white">
             ${product.price}
           </Text>
-          
-          <TouchableOpacity 
-            className="bg-slate-900 dark:bg-white w-8 h-8 items-center justify-center rounded-full active:scale-95 transition-transform"
+
+          <TouchableOpacity
+            className="bg-slate-900 dark:bg-white w-8 h-8 items-center justify-center rounded-full"
           >
-            <Feather name="plus" size={18} className="text-white dark:text-slate-900" />
+            <Feather name="plus" size={18} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
       </View>

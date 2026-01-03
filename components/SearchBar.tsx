@@ -10,8 +10,8 @@ interface SearchBarProps {
 
 export default function SearchBar({ value, onChangeText, onFilterPress }: SearchBarProps) {
   return (
-    <View className="flex-row items-center gap-3 mb-8">
-      <View className="flex-1 flex-row items-center bg-white dark:bg-slate-800 rounded-2xl h-14 px-4 shadow-sm border border-slate-100 dark:border-slate-700">
+    <View className="flex-row items-center mb-8">
+      <View className="flex-1 flex-row items-center bg-white dark:bg-slate-800 rounded-2xl h-14 px-4 border border-slate-100 dark:border-slate-700">
         <Feather name="search" size={20} color="#94A3B8" />
         <TextInput
           value={value}
@@ -22,16 +22,16 @@ export default function SearchBar({ value, onChangeText, onFilterPress }: Search
         />
         {value.length > 0 && (
           <TouchableOpacity onPress={() => onChangeText('')}>
-             <Feather name="x-circle" size={18} color="#94A3B8" />
+            <Feather name="x-circle" size={18} color="#94A3B8" />
           </TouchableOpacity>
         )}
       </View>
-      
-      <TouchableOpacity 
+
+      <TouchableOpacity
         onPress={onFilterPress}
-        className="w-14 h-14 bg-indigo-600 rounded-2xl items-center justify-center shadow-md shadow-indigo-200 dark:shadow-none active:scale-95 transition-transform"
+        className="w-14 h-14 bg-indigo-600 rounded-2xl items-center justify-center shadow-md"
       >
-        <Feather name="sliders" size={22} color="white" />
+        <Feather name="sliders" size={22} color="#FFFFFF" />
       </TouchableOpacity>
     </View>
   );
