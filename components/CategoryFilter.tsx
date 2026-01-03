@@ -12,7 +12,7 @@ export default function CategoryFilter({ categories, selectedCategory, onSelectC
     <View className="mb-6">
       <ScrollView
         horizontal={true}
-
+        showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ gap: 12, paddingHorizontal: 4 }}
       >
         {categories.map((category, index) => {

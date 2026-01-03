@@ -6,19 +6,22 @@ import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
-import { useStore } from '../store/useStore';
+import { useStore, Product, CartItem } from '../store/useStore';
 import ProductCard from '../components/ProductCard';
 import SearchBar from '../components/SearchBar';
 import CategoryFilter from '../components/CategoryFilter';
 
 const CATEGORIES = ['All', 'electronics', 'furniture', 'fashion', 'decoration'];
 
+const selectProducts = (state: { products: Product[] }) => state.products;
+const selectCart = (state: { cart: CartItem[] }) => state.cart;
+
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'ProductListing'>;
 
 export default function ProductListingScreen() {
   const navigation = useNavigation<NavigationProp>();
-  const products = useStore((state) => state.products);
-  const cart = useStore((state) => state.cart);
+  const products = useStore(selectProducts);
+  const cart = useStore(selectCart);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');

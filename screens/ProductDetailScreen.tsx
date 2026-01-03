@@ -5,7 +5,7 @@ import { Feather } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
-import { useStore } from '../store/useStore';
+import { useStore, Product, Review } from '../store/useStore';
 import ReviewSection from '../components/ReviewSection';
 
 type ProductDetailRouteProp = RouteProp<RootStackParamList, 'ProductDetail'>;
@@ -17,9 +17,23 @@ export default function ProductDetailScreen() {
   const { productId } = route.params;
   const { width } = useWindowDimensions();
 
-  const product = useStore((state) => state.products.find((p) => p.id === productId));
-  const reviews = useStore((state) => state.getReviewsByProductId(productId));
-  const addToCart = useStore((state) => state.addToCart);
+  // Create stable selectors that depend on productId
+  const selectProduct = React.useCallback((state: { products: Product[] }) => state.products.find((p: Product) => p.id === productId), [productId]);
+  
+  // Select reviews array directly - this returns a stable reference
+  const selectReviews = React.useCallback((state: { reviews: Review[] }) => state.reviews, []);
+  
+  const selectAddToCart = React.useCallback((state: { addToCart: (product: Product, quantity: number) => void }) => state.addToCart, []);
+  
+  const product = useStore(selectProduct);
+  const allReviews = useStore(selectReviews);
+  const addToCart = useStore(selectAddToCart);
+  
+  // Memoize the filtered reviews to prevent re-creation on each render
+  const reviews = React.useMemo(() => {
+    if (!allReviews) return [];
+    return allReviews.filter((review) => review.productId === productId);
+  }, [allReviews, productId]);
 
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<'Description' | 'Specs'>('Description');
@@ -45,7 +59,7 @@ export default function ProductDetailScreen() {
 
   return (
     <View className="flex-1 bg-white dark:bg-slate-950">
-      <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         {/* Product Image Header */}
         <View className="relative">
           <Image
@@ -122,7 +136,7 @@ export default function ProductDetailScreen() {
             {['Description', 'Specs'].map((tab) => (
               <TouchableOpacity
                 key={tab}
-                onPress={() => setActiveTab(tab as any)}
+                onPress={() => setActiveTab(tab as 'Description' | 'Specs')}
                 className={`mr-8 pb-4 ${activeTab === tab ? 'border-b-2 border-indigo-600' : ''}`}
               >
                 <Text className={`font-outfit-bold ${activeTab === tab ? 'text-indigo-600' : 'text-slate-400'}`}>
@@ -139,7 +153,7 @@ export default function ProductDetailScreen() {
               </Text>
             ) : (
               <View>
-                {product.specifications.map((spec, index) => (
+                {product.specifications.map((spec: { label: string; value: string }, index: number) => (
                   <View key={index} className="flex-row justify-between py-3 border-b border-slate-50 dark:border-slate-800">
                     <Text className="text-slate-500 font-outfit-medium">{spec.label}</Text>
                     <Text className="text-slate-900 dark:text-white font-outfit-bold">{spec.value}</Text>
