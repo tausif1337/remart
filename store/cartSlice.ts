@@ -1,40 +1,13 @@
-import { create } from "zustand";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import type { Product, Review, CartItem } from "./types.ts";
 
-export interface Product {
-  id: string;
-  name: string;
-  price: number;
-  category: string;
-  image: string;
-  rating: number;
-  description: string;
-  specifications: { label: string; value: string }[];
-}
-
-export interface Review {
-  id: string;
-  productId: string;
-  userName: string;
-  userImage: string;
-  rating: number;
-  comment: string;
-  date: string;
-}
-
-export interface CartItem extends Product {
-  quantity: number;
-}
-
-interface AppState {
+interface CartState {
   products: Product[];
   reviews: Review[];
   cart: CartItem[];
-  addToCart: (product: Product, quantity: number) => void;
-  removeFromCart: (productId: string) => void;
-  updateCartQuantity: (productId: string, quantity: number) => void;
-  getReviewsByProductId: (productId: string) => Review[];
 }
 
+// Define mock data (same as in the previous Zustand implementation)
 const MOCK_PRODUCTS: Product[] = [
   {
     id: "1",
@@ -649,38 +622,58 @@ const MOCK_REVIEWS: Review[] = [
   },
 ];
 
-export const useStore = create<AppState>((set, get) => ({
+const initialState: CartState = {
   products: MOCK_PRODUCTS,
   reviews: MOCK_REVIEWS,
   cart: [],
-  addToCart: (product, quantity) => {
-    set((state) => {
+};
+
+export const cartSlice = createSlice({
+  name: "cart",
+  initialState,
+  reducers: {
+    addToCart: (
+      state,
+      action: PayloadAction<{ product: Product; quantity: number }>
+    ) => {
+      const { product, quantity } = action.payload;
       const existingItem = state.cart.find((item) => item.id === product.id);
+
       if (existingItem) {
-        return {
-          cart: state.cart.map((item) =>
-            item.id === product.id
-              ? { ...item, quantity: item.quantity + quantity }
-              : item
-          ),
-        };
+        existingItem.quantity += quantity;
+      } else {
+        state.cart.push({ ...product, quantity });
       }
-      return { cart: [...state.cart, { ...product, quantity }] };
-    });
+    },
+    removeFromCart: (state, action: PayloadAction<string>) => {
+      const productId = action.payload;
+
+      // Defensive: validate productId and ensure it's a proper string
+      if (!productId || typeof productId !== "string") {
+        console.warn(
+          "Invalid productId provided to removeFromCart:",
+          productId
+        );
+        return;
+      }
+
+      // Filter out only the item with the matching ID
+      state.cart = state.cart.filter((item) => item.id !== productId);
+    },
+    updateCartQuantity: (
+      state,
+      action: PayloadAction<{ productId: string; quantity: number }>
+    ) => {
+      const { productId, quantity } = action.payload;
+      const item = state.cart.find((item) => item.id === productId);
+
+      if (item) {
+        item.quantity = quantity;
+      }
+    },
   },
-  removeFromCart: (productId) => {
-    set((state) => ({
-      cart: state.cart.filter((item) => item.id !== productId),
-    }));
-  },
-  updateCartQuantity: (productId, quantity) => {
-    set((state) => ({
-      cart: state.cart.map((item) =>
-        item.id === productId ? { ...item, quantity } : item
-      ),
-    }));
-  },
-  getReviewsByProductId: (productId) => {
-    return get().reviews.filter((review) => review.productId === productId);
-  },
-}));
+});
+
+export const { addToCart, removeFromCart, updateCartQuantity } =
+  cartSlice.actions;
+export default cartSlice.reducer;

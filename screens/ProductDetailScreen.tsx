@@ -13,7 +13,11 @@ import { Feather } from "@expo/vector-icons";
 import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/types";
-import { useStore, Product, Review } from "../store/useStore";
+import { useDispatch, useSelector } from "react-redux";
+import Toast from "react-native-toast-message";
+import { addToCart } from "../store/cartSlice";
+import { Product, Review } from "../store/types";
+import CartIconWithBadge from "../components/CartIconWithBadge";
 import ReviewSection from "../components/ReviewSection";
 
 type ProductDetailRouteProp = RouteProp<RootStackParamList, "ProductDetail">;
@@ -27,35 +31,20 @@ export default function ProductDetailScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { productId } = route.params;
   const { width } = useWindowDimensions();
+  const dispatch = useDispatch();
 
-  // Create stable selectors that depend on productId
-  const selectProduct = React.useCallback(
-    (state: { products: Product[] }) =>
-      state.products.find((p: Product) => p.id === productId),
-    [productId]
-  );
+  // Get all products from the Redux store
+  const products = useSelector((state: any) => state.cart.products);
+  const reviews = useSelector((state: any) => state.cart.reviews);
 
-  // Select reviews array directly - this returns a stable reference
-  const selectReviews = React.useCallback(
-    (state: { reviews: Review[] }) => state.reviews,
-    []
-  );
+  // Find the specific product based on the route parameter
+  const product = products.find((p: Product) => p.id === productId);
 
-  const selectAddToCart = React.useCallback(
-    (state: { addToCart: (product: Product, quantity: number) => void }) =>
-      state.addToCart,
-    []
-  );
-
-  const product = useStore(selectProduct);
-  const allReviews = useStore(selectReviews);
-  const addToCart = useStore(selectAddToCart);
-
-  // Memoize the filtered reviews to prevent re-creation on each render
-  const reviews = React.useMemo(() => {
-    if (!allReviews) return [];
-    return allReviews.filter((review) => review.productId === productId);
-  }, [allReviews, productId]);
+  // Filter reviews for this specific product
+  const productReviews = React.useMemo(() => {
+    if (!reviews) return [];
+    return reviews.filter((review: Review) => review.productId === productId);
+  }, [reviews, productId]);
 
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<"Description" | "Specs">(
@@ -79,8 +68,17 @@ export default function ProductDetailScreen() {
   }
 
   const handleAddToCart = () => {
-    addToCart(product, quantity);
-    // You could add a toast here
+    dispatch(addToCart({ product, quantity }));
+    Toast.show({
+      type: "success",
+      text1: "Added to Cart",
+      text2: `${product.name} was added to your cart!`,
+      visibilityTime: 2000,
+    });
+  };
+
+  const navigateToCart = () => {
+    navigation.navigate("Cart");
   };
 
   return (
@@ -105,9 +103,7 @@ export default function ProductDetailScreen() {
             >
               <Feather name="chevron-left" size={24} color="#1E293B" />
             </TouchableOpacity>
-            <TouchableOpacity className="w-10 h-10 bg-white/90 dark:bg-slate-900/90 rounded-full items-center justify-center">
-              <Feather name="heart" size={20} color="#EF4444" />
-            </TouchableOpacity>
+            <CartIconWithBadge onPress={navigateToCart} />
           </View>
 
           <View className="absolute bottom-0 left-0 right-0 h-12 bg-white dark:bg-slate-950 rounded-t-[40px]" />
@@ -139,7 +135,7 @@ export default function ProductDetailScreen() {
               </Text>
             </View>
             <Text className="text-slate-500 dark:text-slate-400 text-xs font-outfit-medium">
-              {reviews.length} Customer Reviews
+              {productReviews.length} Customer Reviews
             </Text>
           </View>
 
@@ -216,7 +212,7 @@ export default function ProductDetailScreen() {
         </View>
 
         {/* Reviews Section */}
-        <ReviewSection reviews={reviews} />
+        <ReviewSection reviews={productReviews} />
       </ScrollView>
 
       {/* Bottom Bar */}

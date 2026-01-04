@@ -1,15 +1,11 @@
 import { View, Text, Image, TouchableOpacity, Pressable } from "react-native";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Feather } from "@expo/vector-icons";
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  category: string;
-  rating: number;
-}
+import Toast from "react-native-toast-message";
+import { useDispatch, useSelector } from "react-redux";
+import { addToCart } from "../store/cartSlice";
+import { toggleWishlist } from "../store/wishlistSlice";
+import { Product } from "../store/types";
 
 interface ProductCardProps {
   product: Product;
@@ -17,6 +13,36 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onPress }: ProductCardProps) {
+  const dispatch = useDispatch();
+  const wishlist = useSelector((state: any) => state.wishlist.items);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+
+  useEffect(() => {
+    setIsWishlisted(wishlist.some((item: Product) => item.id === product.id));
+  }, [wishlist, product]);
+
+  const handleAddToCart = () => {
+    dispatch(addToCart({ product, quantity: 1 }));
+    Toast.show({
+      type: "success",
+      text1: "Added to Cart",
+      text2: `${product.name} was added to your cart!`,
+      visibilityTime: 2000,
+    });
+  };
+
+  const handleToggleWishlist = () => {
+    dispatch(toggleWishlist(product));
+    Toast.show({
+      type: "success",
+      text1: !isWishlisted ? "Added to Wishlist" : "Removed from Wishlist",
+      text2: !isWishlisted
+        ? `${product.name} was added to your wishlist!`
+        : `${product.name} was removed from your wishlist`,
+      visibilityTime: 2000,
+    });
+  };
+
   return (
     <Pressable
       onPress={() => onPress(product)}
@@ -39,8 +65,16 @@ export default function ProductCard({ product, onPress }: ProductCardProps) {
         </View>
 
         {/* Favorite Button - Glassmorphism */}
-        <TouchableOpacity className="absolute top-3 right-3 w-8 h-8 bg-white/90 dark:bg-black/60 rounded-full items-center justify-center">
-          <Feather name="heart" size={16} color="#EF4444" />
+        <TouchableOpacity
+          className="absolute top-3 right-3 w-8 h-8 bg-white/90 dark:bg-black/60 rounded-full items-center justify-center"
+          onPress={handleToggleWishlist}
+        >
+          <Feather
+            name="heart"
+            size={16}
+            color={isWishlisted ? "#EF4444" : "#94A3B8"}
+            fill={isWishlisted ? "#EF4444" : "none"}
+          />
         </TouchableOpacity>
       </View>
 
@@ -65,7 +99,10 @@ export default function ProductCard({ product, onPress }: ProductCardProps) {
             ${product.price}
           </Text>
 
-          <TouchableOpacity className="bg-slate-900 dark:bg-white w-8 h-8 items-center justify-center rounded-full">
+          <TouchableOpacity
+            className="bg-slate-900 dark:bg-white w-8 h-8 items-center justify-center rounded-full"
+            onPress={handleAddToCart}
+          >
             <Feather name="plus" size={18} color="#FFFFFF" />
           </TouchableOpacity>
         </View>

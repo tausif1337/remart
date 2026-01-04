@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, Image, TouchableOpacity, FlatList } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Review } from "../store/useStore";
+import { Review } from "../store/types";
 
 interface ReviewSectionProps {
   reviews: Review[];

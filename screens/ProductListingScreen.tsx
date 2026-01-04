@@ -13,15 +13,14 @@ import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/types";
-import { useStore, Product, CartItem } from "../store/useStore";
+import { useSelector } from "react-redux";
+import { Product, CartItem } from "../store/types";
+import CartIconWithBadge from "../components/CartIconWithBadge";
 import ProductCard from "../components/ProductCard";
 import SearchBar from "../components/SearchBar";
 import CategoryFilter from "../components/CategoryFilter";
 
 const CATEGORIES = ["All", "electronics", "furniture", "fashion", "decoration"];
-
-const selectProducts = (state: { products: Product[] }) => state.products;
-const selectCart = (state: { cart: CartItem[] }) => state.cart;
 
 type NavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -30,21 +29,26 @@ type NavigationProp = NativeStackNavigationProp<
 
 export default function ProductListingScreen() {
   const navigation = useNavigation<NavigationProp>();
-  const products = useStore(selectProducts);
-  const cart = useStore(selectCart);
+
+  // Get products and cart from Redux store
+  const products = useSelector((state: any) => state.cart.products);
+  const cart = useSelector((state: any) => state.cart.cart);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const { width } = useWindowDimensions();
 
-  const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const cartCount = cart.reduce(
+    (acc: number, item: CartItem) => acc + item.quantity,
+    0
+  );
 
   // Responsive column calculation
   const numColumns = width > 1024 ? 4 : width > 768 ? 3 : 2;
   const contentPadding = width > 768 ? 32 : 24;
 
   const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
+    return products.filter((product: Product) => {
       const matchesSearch = product.name
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
@@ -53,6 +57,10 @@ export default function ProductListingScreen() {
       return matchesSearch && matchesCategory;
     });
   }, [products, searchQuery, selectedCategory]);
+
+  const navigateToCart = () => {
+    navigation.navigate("Cart");
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50 dark:bg-slate-950">
@@ -71,16 +79,7 @@ export default function ProductListingScreen() {
             </Text>
           </View>
 
-          <TouchableOpacity className="w-12 h-12 bg-white dark:bg-slate-900 rounded-full items-center justify-center border border-slate-100 dark:border-slate-800 relative">
-            <Feather name="shopping-bag" size={20} color="#1E293B" />
-            {cartCount > 0 && (
-              <View className="absolute -top-1 -right-1 min-w-[20px] h-[20px] bg-red-500 rounded-full border-2 border-white dark:border-slate-800 items-center justify-center">
-                <Text className="text-[10px] text-white font-outfit-bold">
-                  {cartCount}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
+          <CartIconWithBadge onPress={navigateToCart} />
         </View>
 
         {/* Search & Filter */}
