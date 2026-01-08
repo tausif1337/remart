@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -7,20 +7,38 @@ import { useSelector, useDispatch } from "react-redux";
 import Toast from "react-native-toast-message";
 import { removeFromCart, updateCartQuantity } from "../store/cartSlice";
 import { CartItem } from "../store/types";
+import ConfirmationModal from "../components/ConfirmationModal";
 
 const CartScreen: React.FC = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const cart = useSelector((state: any) => state.cart.cart);
+  
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [itemToRemove, setItemToRemove] = useState<string | null>(null);
 
   const handleRemoveItem = (productId: string) => {
-    dispatch(removeFromCart(productId));
-    Toast.show({
-      type: "success",
-      text1: "Item Removed",
-      text2: "Item has been removed from your cart",
-      visibilityTime: 2000,
-    });
+    setItemToRemove(productId);
+    setShowConfirmation(true);
+  };
+
+  const confirmRemoveItem = () => {
+    if (itemToRemove) {
+      dispatch(removeFromCart(itemToRemove));
+      Toast.show({
+        type: "success",
+        text1: "Item Removed",
+        text2: "Item has been removed from your cart",
+        visibilityTime: 2000,
+      });
+      setShowConfirmation(false);
+      setItemToRemove(null);
+    }
+  };
+
+  const cancelRemoveItem = () => {
+    setShowConfirmation(false);
+    setItemToRemove(null);
   };
 
   const handleUpdateQuantity = (productId: string, quantity: number) => {
@@ -45,8 +63,7 @@ const CartScreen: React.FC = () => {
 
   const calculateTotal = () => {
     return cart.reduce(
-      (total: number, item: CartItem) => total + item.price * item.quantity,
-      0
+      (total: number, item: CartItem) => total + item.price * item.quantity, 0
     );
   };
 
@@ -89,6 +106,8 @@ const CartScreen: React.FC = () => {
       </TouchableOpacity>
     </View>
   );
+
+
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50 dark:bg-slate-900 p-4">
@@ -159,6 +178,11 @@ const CartScreen: React.FC = () => {
           </>
         )}
       </View>
+      <ConfirmationModal
+        visible={showConfirmation}
+        onClose={cancelRemoveItem}
+        onConfirm={confirmRemoveItem}
+      />
     </SafeAreaView>
   );
 };
