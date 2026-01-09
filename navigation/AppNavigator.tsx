@@ -5,6 +5,7 @@ import ProductListingScreen from "../screens/ProductListingScreen";
 import ProductDetailScreen from "../screens/ProductDetailScreen";
 import CartScreen from "../screens/CartScreen";
 import WishlistScreen from "../screens/WishlistScreen";
+import CheckoutScreen from "../screens/CheckoutScreen";
 import { RootStackParamList } from "./types";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -31,6 +32,11 @@ export default function AppNavigator() {
         <Stack.Screen
           name="Wishlist"
           component={WishlistScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Checkout"
+          component={CheckoutScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

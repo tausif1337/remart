@@ -8,9 +8,11 @@ import Toast from "react-native-toast-message";
 import { removeFromCart, updateCartQuantity } from "../store/cartSlice";
 import { CartItem } from "../store/types";
 import ConfirmationModal from "../components/ConfirmationModal";
+import { RootStackParamList } from "../navigation/types";
+import { NavigationProp } from "@react-navigation/native";
 
 const CartScreen: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const dispatch = useDispatch();
   const cart = useSelector((state: any) => state.cart.cart);
   
@@ -162,12 +164,7 @@ const CartScreen: React.FC = () => {
               <TouchableOpacity
                 className="bg-indigo-600 h-14 rounded-xl items-center justify-center mt-4"
                 onPress={() => {
-                  Toast.show({
-                    type: "success",
-                    text1: "Checkout Successful",
-                    text2: "Your order has been placed successfully!",
-                    visibilityTime: 3000,
-                  });
+                  navigation.navigate("Checkout");
                 }}
               >
                 <Text className="text-white font-outfit-bold text-lg">
