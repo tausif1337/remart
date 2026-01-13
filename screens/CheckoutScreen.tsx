@@ -14,6 +14,8 @@ import { useSelector } from "react-redux";
 import Toast from "react-native-toast-message";
 import { CartItem } from "../store/types";
 import { RootStackParamList } from "../navigation/types";
+import { WebView, WebViewNavigation } from 'react-native-webview';
+import { initiateSSLCommerzPayment } from "../utils/sslCommerzHelper";
 
 interface FormData {
   firstName: string;
@@ -69,6 +71,8 @@ const CheckoutScreen: React.FC = () => {
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showPaymentWebView, setShowPaymentWebView] = useState(false);
+  const [paymentUrl, setPaymentUrl] = useState('');
 
   // Calculate total amount
   const calculateTotal = () => {
@@ -266,29 +270,75 @@ const CheckoutScreen: React.FC = () => {
     setIsProcessing(true);
 
     try {
-      // Simulate payment processing delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Mock payment success
-      Toast.show({
-        type: "success",
-        text1: "Payment Successful!",
-        text2: "Your order has been placed successfully!",
-        visibilityTime: 3000,
+      // Initiate SSLCommerz payment
+      const result = await initiateSSLCommerzPayment({
+        totalAmount: calculateTotal(),
+        cartItems: cart,
+        customerInfo: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          city: formData.city,
+          zipCode: formData.zipCode,
+          country: formData.country,
+        }
       });
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Payment initiation failed');
+      }
 
-      // Navigate back to product listing
-      navigation.navigate("ProductListing");
-    } catch (error) {
+      // Set the payment URL and show the webview
+      setPaymentUrl(result.paymentUrl || '');
+      setShowPaymentWebView(true);
+    } catch (error: any) {
+      console.error('SSLCommerz payment error:', error);
       Toast.show({
         type: "error",
         text1: "Payment Failed",
-        text2: "An error occurred during payment processing",
+        text2: error.message || "An error occurred during payment processing",
         visibilityTime: 3000,
       });
-    } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handlePaymentSuccess = () => {
+    Toast.show({
+      type: "success",
+      text1: "Payment Successful!",
+      text2: "Your order has been placed successfully!",
+      visibilityTime: 3000,
+    });
+
+    // Navigate back to product listing
+    navigation.navigate("ProductListing");
+    setShowPaymentWebView(false);
+    setIsProcessing(false);
+  };
+
+  const handlePaymentFailure = () => {
+    Toast.show({
+      type: "error",
+      text1: "Payment Failed",
+      text2: "Your payment was not completed successfully",
+      visibilityTime: 3000,
+    });
+    setShowPaymentWebView(false);
+    setIsProcessing(false);
+  };
+
+  const handlePaymentCancel = () => {
+    Toast.show({
+      type: "info",
+      text1: "Payment Cancelled",
+      text2: "You cancelled the payment process",
+      visibilityTime: 3000,
+    });
+    setShowPaymentWebView(false);
+    setIsProcessing(false);
   };
 
   return (
@@ -620,6 +670,27 @@ const CheckoutScreen: React.FC = () => {
           )}
         </TouchableOpacity>
       </ScrollView>
+      
+      {/* SSLCommerz Payment WebView */}
+      {showPaymentWebView && (
+        <WebView
+          source={{ uri: paymentUrl }}
+          className="absolute top-0 left-0 w-full h-full bg-white z-10"
+          onNavigationStateChange={(navState: WebViewNavigation) => {
+            // Handle success, fail, and cancel redirects
+            if (navState.url.includes('success')) {
+              handlePaymentSuccess();
+            } else if (navState.url.includes('fail')) {
+              handlePaymentFailure();
+            } else if (navState.url.includes('cancel')) {
+              handlePaymentCancel();
+            }
+          }}
+          onError={() => {
+            handlePaymentFailure();
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 };
