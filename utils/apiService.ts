@@ -28,13 +28,21 @@ interface SSLCommerzPaymentData {
   cus_phone: string;
   cus_add1: string;
   cus_city: string;
+  cus_state?: string;
   cus_postcode: string;
   cus_country: string;
+  ship_name: string;
+  ship_city?: string;
+  ship_state?: string;
+  ship_postcode?: string;
+  ship_country?: string;
   shipping_name?: string;
   shipping_add1?: string;
   shipping_city?: string;
+  shipping_state?: string;
   shipping_postcode?: string;
   shipping_country?: string;
+  ship_add1?: string;
   multi_card_name?: string;
   allowed_bin?: string;
 }

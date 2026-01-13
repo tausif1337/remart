@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import { useSelector } from "react-redux";
 import Toast from "react-native-toast-message";
 import { CartItem } from "../store/types";
 import { RootStackParamList } from "../navigation/types";
-import { WebView, WebViewNavigation } from 'react-native-webview';
+import { WebView, WebViewNavigation } from "react-native-webview";
 import { initiateSSLCommerzPayment } from "../utils/sslCommerzHelper";
 
 interface FormData {
@@ -27,10 +27,6 @@ interface FormData {
   state: string;
   zipCode: string;
   country: string;
-  cardNumber: string;
-  cardHolderName: string;
-  expiryDate: string;
-  cvv: string;
 }
 
 interface FormErrors {
@@ -43,16 +39,12 @@ interface FormErrors {
   state?: string;
   zipCode?: string;
   country?: string;
-  cardNumber?: string;
-  cardHolderName?: string;
-  expiryDate?: string;
-  cvv?: string;
 }
 
 const CheckoutScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const cart = useSelector((state: any) => state.cart.cart);
-  
+
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
@@ -63,22 +55,25 @@ const CheckoutScreen: React.FC = () => {
     state: "",
     zipCode: "",
     country: "",
-    cardNumber: "",
-    cardHolderName: "",
-    expiryDate: "",
-    cvv: "",
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isProcessing, setIsProcessing] = useState(false);
   const [showPaymentWebView, setShowPaymentWebView] = useState(false);
-  const [paymentUrl, setPaymentUrl] = useState('');
+  const [paymentUrl, setPaymentUrl] = useState("");
+  const [isCartEmpty, setIsCartEmpty] = useState(false);
+
+  // Memoized total calculation
+  const totalAmount = useMemo(() => {
+    return cart.reduce(
+      (total: number, item: CartItem) => total + item.price * item.quantity,
+      0
+    );
+  }, [cart]);
 
   // Calculate total amount
   const calculateTotal = () => {
-    return cart.reduce(
-      (total: number, item: CartItem) => total + item.price * item.quantity, 0
-    );
+    return totalAmount;
   };
 
   // Validation functions
@@ -124,16 +119,20 @@ const CheckoutScreen: React.FC = () => {
     return zipRegex.test(zipCode);
   };
 
-  const validateForm = (): boolean => {
+  const validateForm = useCallback((): boolean => {
     const newErrors: FormErrors = {};
 
     // Validate personal information
     if (!formData.firstName.trim()) {
       newErrors.firstName = "First name is required";
+    } else if (formData.firstName.trim().length < 2) {
+      newErrors.firstName = "First name must be at least 2 characters";
     }
 
     if (!formData.lastName.trim()) {
       newErrors.lastName = "Last name is required";
+    } else if (formData.lastName.trim().length < 2) {
+      newErrors.lastName = "Last name must be at least 2 characters";
     }
 
     if (!formData.email.trim()) {
@@ -151,14 +150,20 @@ const CheckoutScreen: React.FC = () => {
     // Validate address information
     if (!formData.address.trim()) {
       newErrors.address = "Address is required";
+    } else if (formData.address.trim().length < 5) {
+      newErrors.address = "Please enter a complete address";
     }
 
     if (!formData.city.trim()) {
       newErrors.city = "City is required";
+    } else if (formData.city.trim().length < 2) {
+      newErrors.city = "City must be at least 2 characters";
     }
 
     if (!formData.state.trim()) {
       newErrors.state = "State is required";
+    } else if (formData.state.trim().length < 2) {
+      newErrors.state = "State must be at least 2 characters";
     }
 
     if (!formData.zipCode.trim()) {
@@ -169,107 +174,124 @@ const CheckoutScreen: React.FC = () => {
 
     if (!formData.country.trim()) {
       newErrors.country = "Country is required";
-    }
-
-    // Validate payment information
-    if (!formData.cardNumber.trim()) {
-      newErrors.cardNumber = "Card number is required";
-    } else if (!validateCardNumber(formData.cardNumber)) {
-      newErrors.cardNumber = "Please enter a valid card number (16 digits)";
-    }
-
-    if (!formData.cardHolderName.trim()) {
-      newErrors.cardHolderName = "Card holder name is required";
-    }
-
-    if (!formData.expiryDate.trim()) {
-      newErrors.expiryDate = "Expiry date is required";
-    } else if (!validateExpiryDate(formData.expiryDate)) {
-      newErrors.expiryDate = "Please enter a valid expiry date (MM/YY)";
-    }
-
-    if (!formData.cvv.trim()) {
-      newErrors.cvv = "CVV is required";
-    } else if (!validateCVV(formData.cvv)) {
-      newErrors.cvv = "Please enter a valid CVV (3-4 digits)";
+    } else if (formData.country.trim().length < 2) {
+      newErrors.country = "Country must be at least 2 characters";
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [formData, validateEmail, validatePhone, validateZipCode]);
 
-  const handleChange = (field: keyof FormData, value: string) => {
-    // Format card number as user types
-    if (field === "cardNumber") {
+  const handleChange = useCallback((field: keyof FormData, value: string) => {
+    // Format address as user types
+    if (field === "address") {
+      // Capitalize the first letter of each sentence and normalize spaces
       const formattedValue = value
-        .replace(/\s/g, "")
-        .replace(/(\d{4})/g, "$1 ")
-        .trim()
-        .slice(0, 19);
-      setFormData({ ...formData, [field]: formattedValue });
-      
+        .split('. ')  // Split by period followed by space
+        .map(sentence => 
+          sentence.charAt(0).toUpperCase() + sentence.slice(1).toLowerCase()
+        )
+        .join('. ');
+      setFormData(prev => ({ ...prev, [field]: formattedValue }));
+        
       // Clear error when user starts typing
-      if (errors[field]) {
-        setErrors({ ...errors, [field]: undefined });
-      }
-    } 
-    // Format expiry date as user types
-    else if (field === "expiryDate") {
-      let formattedValue = value.replace(/\D/g, ""); // Remove non-digit characters
-      
-      if (formattedValue.length > 2) {
-        formattedValue = formattedValue.substring(0, 2) + "/" + formattedValue.substring(2, 4);
-      }
-      
-      setFormData({ ...formData, [field]: formattedValue });
-      
-      if (errors[field]) {
-        setErrors({ ...errors, [field]: undefined });
-      }
-    }
-    // Format CVV as user types
-    else if (field === "cvv") {
-      const numericValue = value.replace(/\D/g, "").substring(0, 4);
-      setFormData({ ...formData, [field]: numericValue });
-      
-      if (errors[field]) {
-        setErrors({ ...errors, [field]: undefined });
-      }
+      setErrors(prev => {
+        if (prev[field]) {
+          const newErrors = { ...prev };
+          delete newErrors[field];
+          return newErrors;
+        }
+        return prev;
+      });
     }
     // Format ZIP code as user types
     else if (field === "zipCode") {
       const alphanumericValue = value.replace(/[^A-Za-z0-9\s\-]/g, "");
-      setFormData({ ...formData, [field]: alphanumericValue });
+      setFormData(prev => ({ ...prev, [field]: alphanumericValue }));
+        
+      // Clear error when user starts typing
+      setErrors(prev => {
+        if (prev[field]) {
+          const newErrors = { ...prev };
+          delete newErrors[field];
+          return newErrors;
+        }
+        return prev;
+      });
+    }
+    // Format phone number as user types
+    else if (field === "phone") {
+      const phoneValue = value.replace(/[^+\d\s\-\(\)]/g, "");
+      setFormData(prev => ({ ...prev, [field]: phoneValue }));
+        
+      // Clear error when user starts typing
+      setErrors(prev => {
+        if (prev[field]) {
+          const newErrors = { ...prev };
+          delete newErrors[field];
+          return newErrors;
+        }
+        return prev;
+      });
+    }
+    // Format city and state to capitalize first letter of each word
+    else if (field === "city" || field === "state" || field === "country") {
+      const capitalizedValue = value.replace(/\b\w/g, l => l.toUpperCase());
+      setFormData(prev => ({ ...prev, [field]: capitalizedValue }));
       
-      if (errors[field]) {
-        setErrors({ ...errors, [field]: undefined });
-      }
+      // Clear error when user starts typing
+      setErrors(prev => {
+        if (prev[field]) {
+          const newErrors = { ...prev };
+          delete newErrors[field];
+          return newErrors;
+        }
+        return prev;
+      });
     }
     // For other fields
     else {
-      setFormData({ ...formData, [field]: value });
-      
+      setFormData(prev => ({ ...prev, [field]: value }));
+        
       // Clear error when user starts typing
-      if (errors[field]) {
-        setErrors({ ...errors, [field]: undefined });
-      }
+      setErrors(prev => {
+        if (prev[field]) {
+          const newErrors = { ...prev };
+          delete newErrors[field];
+          return newErrors;
+        }
+        return prev;
+      });
     }
-  };
+  }, []);
 
-  const handlePayment = async () => {
+  const handlePayment = useCallback(async () => {
     if (!validateForm()) {
       Toast.show({
         type: "error",
         text1: "Validation Error",
-        text2: "Please fix all errors before proceeding",
+        text2: "Please fix all highlighted fields before proceeding",
         visibilityTime: 3000,
       });
+      // Scroll to first error field
+      const firstErrorField = Object.keys(errors).find(key => errors[key as keyof FormErrors]);
+      if (firstErrorField) {
+        // We could implement scrolling to the error field if needed
+      }
       return;
     }
 
     setIsProcessing(true);
 
     try {
+      // Show processing toast
+      Toast.show({
+        type: "info",
+        text1: "Processing Payment",
+        text2: "Please wait while we prepare your payment...",
+        visibilityTime: 2000,
+      });
+
       // Initiate SSLCommerz payment
       const result = await initiateSSLCommerzPayment({
         totalAmount: calculateTotal(),
@@ -281,31 +303,32 @@ const CheckoutScreen: React.FC = () => {
           phone: formData.phone,
           address: formData.address,
           city: formData.city,
+          state: formData.state,
           zipCode: formData.zipCode,
           country: formData.country,
-        }
+        },
       });
-      
+
       if (!result.success) {
-        throw new Error(result.error || 'Payment initiation failed');
+        throw new Error(result.error || "Payment initiation failed");
       }
 
       // Set the payment URL and show the webview
-      setPaymentUrl(result.paymentUrl || '');
+      setPaymentUrl(result.paymentUrl || "");
       setShowPaymentWebView(true);
     } catch (error: any) {
-      console.error('SSLCommerz payment error:', error);
+      console.error("SSLCommerz payment error:", error);
       Toast.show({
         type: "error",
-        text1: "Payment Failed",
-        text2: error.message || "An error occurred during payment processing",
-        visibilityTime: 3000,
+        text1: "Payment Processing Failed",
+        text2: error.message || "An error occurred during payment processing. Please try again.",
+        visibilityTime: 4000,
       });
       setIsProcessing(false);
     }
-  };
+  }, [validateForm, formData, cart, calculateTotal, errors]);
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = useCallback(() => {
     Toast.show({
       type: "success",
       text1: "Payment Successful!",
@@ -313,52 +336,57 @@ const CheckoutScreen: React.FC = () => {
       visibilityTime: 3000,
     });
 
-    // Navigate back to product listing
+    // Clear cart after successful payment
+    // In a real app, you would dispatch an action to clear the cart
+    // dispatch(clearCart());
+    
+    // Navigate to order confirmation or product listing
     navigation.navigate("ProductListing");
     setShowPaymentWebView(false);
     setIsProcessing(false);
-  };
+  }, [navigation]);
 
-  const handlePaymentFailure = () => {
+  const handlePaymentFailure = useCallback(() => {
     Toast.show({
       type: "error",
       text1: "Payment Failed",
-      text2: "Your payment was not completed successfully",
-      visibilityTime: 3000,
+      text2: "Your payment was not completed successfully. Please try again.",
+      visibilityTime: 4000,
     });
     setShowPaymentWebView(false);
     setIsProcessing(false);
-  };
+  }, []);
 
-  const handlePaymentCancel = () => {
+  const handlePaymentCancel = useCallback(() => {
     Toast.show({
       type: "info",
       text1: "Payment Cancelled",
-      text2: "You cancelled the payment process",
+      text2: "You cancelled the payment process. Your cart is still available.",
       visibilityTime: 3000,
     });
     setShowPaymentWebView(false);
     setIsProcessing(false);
-  };
+  }, []);
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50 dark:bg-slate-900">
-      <ScrollView 
+      <ScrollView
         className="flex-1 px-4 py-6"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 120 }}
+        keyboardShouldPersistTaps="handled"
       >
         <View className="mb-6">
           <TouchableOpacity
             onPress={() => navigation.goBack()}
-            className="w-10 h-10 bg-white dark:bg-slate-800 rounded-full items-center justify-center mb-4"
+            className="w-12 h-12 bg-white dark:bg-slate-800 rounded-full items-center justify-center mb-4"
           >
             <Feather name="chevron-left" size={24} color="#1E293B" />
           </TouchableOpacity>
-          <Text className="text-2xl font-outfit-black text-slate-900 dark:text-white">
+          <Text className="text-2xl font-outfit-black text-slate-900 dark:text-white mb-1">
             Checkout
           </Text>
-          <Text className="text-lg font-outfit-bold text-slate-500">
+          <Text className="text-base font-outfit-regular text-slate-600 dark:text-slate-400">
             Complete your purchase
           </Text>
         </View>
@@ -368,24 +396,46 @@ const CheckoutScreen: React.FC = () => {
           <Text className="text-lg font-outfit-bold text-slate-900 dark:text-white mb-3">
             Order Summary
           </Text>
-          {cart.map((item: CartItem) => (
-            <View key={item.id} className="flex-row justify-between py-2 border-b border-slate-100 dark:border-slate-700">
-              <Text className="text-slate-600 dark:text-slate-300">
-                {item.name} x{item.quantity}
-              </Text>
-              <Text className="text-slate-900 dark:text-white font-outfit-bold">
-                ${(item.price * item.quantity).toFixed(2)}
-              </Text>
-            </View>
-          ))}
+          {cart.length > 0 ? (
+            cart.map((item: CartItem) => (
+              <View
+                key={item.id}
+                className="flex-row justify-between py-2 border-b border-slate-100 dark:border-slate-700"
+              >
+                <View className="flex-1">
+                  <Text className="text-slate-600 dark:text-slate-300 font-outfit-medium">
+                    {item.name}
+                  </Text>
+                  <Text className="text-slate-500 dark:text-slate-400 text-xs">
+                    Qty: {item.quantity} × ${item.price.toFixed(2)}
+                  </Text>
+                </View>
+                <Text className="text-slate-900 dark:text-white font-outfit-bold">
+                  ${(item.price * item.quantity).toFixed(2)}
+                </Text>
+              </View>
+            ))
+          ) : (
+            <Text className="text-slate-500 dark:text-slate-400 text-center py-4">
+              Your cart is empty
+            </Text>
+          )}
           <View className="flex-row justify-between pt-3 mt-2">
             <Text className="text-lg font-outfit-bold text-slate-900 dark:text-white">
               Total:
             </Text>
             <Text className="text-xl font-outfit-black text-indigo-600 dark:text-indigo-400">
-              ${calculateTotal().toFixed(2)}
+              ${totalAmount.toFixed(2)}
             </Text>
           </View>
+          <TouchableOpacity 
+            className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700"
+            onPress={() => navigation.navigate('Cart')}
+          >
+            <Text className="text-indigo-600 dark:text-indigo-400 text-center font-outfit-medium">
+              Edit Cart
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Personal Information */}
@@ -393,9 +443,9 @@ const CheckoutScreen: React.FC = () => {
           <Text className="text-lg font-outfit-bold text-slate-900 dark:text-white mb-4">
             Personal Information
           </Text>
-          
-          <View className="grid grid-cols-2 gap-4 mb-4">
-            <View>
+
+          <View className="flex-row gap-3 mb-4">
+            <View className="flex-1">
               <Text className="text-sm font-outfit-bold text-slate-700 dark:text-slate-300 mb-1">
                 First Name *
               </Text>
@@ -404,15 +454,19 @@ const CheckoutScreen: React.FC = () => {
                 onChangeText={(value) => handleChange("firstName", value)}
                 placeholder="John"
                 className={`h-12 px-4 bg-slate-50 dark:bg-slate-700 rounded-lg border ${
-                  errors.firstName ? "border-red-500" : "border-slate-200 dark:border-slate-600"
+                  errors.firstName
+                    ? "border-red-500"
+                    : "border-slate-200 dark:border-slate-600"
                 } text-slate-900 dark:text-white`}
               />
               {errors.firstName && (
-                <Text className="text-red-500 text-xs mt-1">{errors.firstName}</Text>
+                <Text className="text-red-500 text-xs mt-1">
+                  {errors.firstName}
+                </Text>
               )}
             </View>
-            
-            <View>
+
+            <View className="flex-1">
               <Text className="text-sm font-outfit-bold text-slate-700 dark:text-slate-300 mb-1">
                 Last Name *
               </Text>
@@ -421,15 +475,19 @@ const CheckoutScreen: React.FC = () => {
                 onChangeText={(value) => handleChange("lastName", value)}
                 placeholder="Doe"
                 className={`h-12 px-4 bg-slate-50 dark:bg-slate-700 rounded-lg border ${
-                  errors.lastName ? "border-red-500" : "border-slate-200 dark:border-slate-600"
+                  errors.lastName
+                    ? "border-red-500"
+                    : "border-slate-200 dark:border-slate-600"
                 } text-slate-900 dark:text-white`}
               />
               {errors.lastName && (
-                <Text className="text-red-500 text-xs mt-1">{errors.lastName}</Text>
+                <Text className="text-red-500 text-xs mt-1">
+                  {errors.lastName}
+                </Text>
               )}
             </View>
           </View>
-          
+
           <View className="mb-4">
             <Text className="text-sm font-outfit-bold text-slate-700 dark:text-slate-300 mb-1">
               Email Address *
@@ -441,14 +499,16 @@ const CheckoutScreen: React.FC = () => {
               keyboardType="email-address"
               autoCapitalize="none"
               className={`h-12 px-4 bg-slate-50 dark:bg-slate-700 rounded-lg border ${
-                errors.email ? "border-red-500" : "border-slate-200 dark:border-slate-600"
+                errors.email
+                  ? "border-red-500"
+                  : "border-slate-200 dark:border-slate-600"
               } text-slate-900 dark:text-white`}
             />
             {errors.email && (
               <Text className="text-red-500 text-xs mt-1">{errors.email}</Text>
             )}
           </View>
-          
+
           <View>
             <Text className="text-sm font-outfit-bold text-slate-700 dark:text-slate-300 mb-1">
               Phone Number *
@@ -459,7 +519,9 @@ const CheckoutScreen: React.FC = () => {
               placeholder="+1 (555) 123-4567"
               keyboardType="phone-pad"
               className={`h-12 px-4 bg-slate-50 dark:bg-slate-700 rounded-lg border ${
-                errors.phone ? "border-red-500" : "border-slate-200 dark:border-slate-600"
+                errors.phone
+                  ? "border-red-500"
+                  : "border-slate-200 dark:border-slate-600"
               } text-slate-900 dark:text-white`}
             />
             {errors.phone && (
@@ -473,7 +535,7 @@ const CheckoutScreen: React.FC = () => {
           <Text className="text-lg font-outfit-bold text-slate-900 dark:text-white mb-4">
             Shipping Address
           </Text>
-          
+
           <View className="mb-4">
             <Text className="text-sm font-outfit-bold text-slate-700 dark:text-slate-300 mb-1">
               Address *
@@ -483,16 +545,20 @@ const CheckoutScreen: React.FC = () => {
               onChangeText={(value) => handleChange("address", value)}
               placeholder="123 Main St"
               className={`h-12 px-4 bg-slate-50 dark:bg-slate-700 rounded-lg border ${
-                errors.address ? "border-red-500" : "border-slate-200 dark:border-slate-600"
+                errors.address
+                  ? "border-red-500"
+                  : "border-slate-200 dark:border-slate-600"
               } text-slate-900 dark:text-white`}
             />
             {errors.address && (
-              <Text className="text-red-500 text-xs mt-1">{errors.address}</Text>
+              <Text className="text-red-500 text-xs mt-1">
+                {errors.address}
+              </Text>
             )}
           </View>
-          
-          <View className="grid grid-cols-2 gap-4 mb-4">
-            <View>
+
+          <View className="flex-row gap-3 mb-4">
+            <View className="flex-1">
               <Text className="text-sm font-outfit-bold text-slate-700 dark:text-slate-300 mb-1">
                 City *
               </Text>
@@ -501,15 +567,17 @@ const CheckoutScreen: React.FC = () => {
                 onChangeText={(value) => handleChange("city", value)}
                 placeholder="New York"
                 className={`h-12 px-4 bg-slate-50 dark:bg-slate-700 rounded-lg border ${
-                  errors.city ? "border-red-500" : "border-slate-200 dark:border-slate-600"
+                  errors.city
+                    ? "border-red-500"
+                    : "border-slate-200 dark:border-slate-600"
                 } text-slate-900 dark:text-white`}
               />
               {errors.city && (
                 <Text className="text-red-500 text-xs mt-1">{errors.city}</Text>
               )}
             </View>
-            
-            <View>
+
+            <View className="flex-1">
               <Text className="text-sm font-outfit-bold text-slate-700 dark:text-slate-300 mb-1">
                 State *
               </Text>
@@ -518,17 +586,21 @@ const CheckoutScreen: React.FC = () => {
                 onChangeText={(value) => handleChange("state", value)}
                 placeholder="NY"
                 className={`h-12 px-4 bg-slate-50 dark:bg-slate-700 rounded-lg border ${
-                  errors.state ? "border-red-500" : "border-slate-200 dark:border-slate-600"
+                  errors.state
+                    ? "border-red-500"
+                    : "border-slate-200 dark:border-slate-600"
                 } text-slate-900 dark:text-white`}
               />
               {errors.state && (
-                <Text className="text-red-500 text-xs mt-1">{errors.state}</Text>
+                <Text className="text-red-500 text-xs mt-1">
+                  {errors.state}
+                </Text>
               )}
             </View>
           </View>
-          
-          <View className="grid grid-cols-2 gap-4 mb-4">
-            <View>
+
+          <View className="flex-row gap-3 mb-4">
+            <View className="flex-1">
               <Text className="text-sm font-outfit-bold text-slate-700 dark:text-slate-300 mb-1">
                 ZIP Code *
               </Text>
@@ -537,15 +609,19 @@ const CheckoutScreen: React.FC = () => {
                 onChangeText={(value) => handleChange("zipCode", value)}
                 placeholder="10001"
                 className={`h-12 px-4 bg-slate-50 dark:bg-slate-700 rounded-lg border ${
-                  errors.zipCode ? "border-red-500" : "border-slate-200 dark:border-slate-600"
+                  errors.zipCode
+                    ? "border-red-500"
+                    : "border-slate-200 dark:border-slate-600"
                 } text-slate-900 dark:text-white`}
               />
               {errors.zipCode && (
-                <Text className="text-red-500 text-xs mt-1">{errors.zipCode}</Text>
+                <Text className="text-red-500 text-xs mt-1">
+                  {errors.zipCode}
+                </Text>
               )}
             </View>
-            
-            <View>
+
+            <View className="flex-1">
               <Text className="text-sm font-outfit-bold text-slate-700 dark:text-slate-300 mb-1">
                 Country *
               </Text>
@@ -554,123 +630,64 @@ const CheckoutScreen: React.FC = () => {
                 onChangeText={(value) => handleChange("country", value)}
                 placeholder="USA"
                 className={`h-12 px-4 bg-slate-50 dark:bg-slate-700 rounded-lg border ${
-                  errors.country ? "border-red-500" : "border-slate-200 dark:border-slate-600"
+                  errors.country
+                    ? "border-red-500"
+                    : "border-slate-200 dark:border-slate-600"
                 } text-slate-900 dark:text-white`}
               />
               {errors.country && (
-                <Text className="text-red-500 text-xs mt-1">{errors.country}</Text>
+                <Text className="text-red-500 text-xs mt-1">
+                  {errors.country}
+                </Text>
               )}
             </View>
           </View>
         </View>
 
-        {/* Payment Information */}
+        {/* SSLCommerz Payment Method Selection */}
         <View className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 mb-6">
           <Text className="text-lg font-outfit-bold text-slate-900 dark:text-white mb-4">
-            Payment Information
+            Payment Method
           </Text>
-          
-          <View className="mb-4">
-            <Text className="text-sm font-outfit-bold text-slate-700 dark:text-slate-300 mb-1">
-              Card Number *
+          <Text className="text-slate-600 dark:text-slate-300 mb-3">
+            Select your preferred payment method through SSLCommerz.
+            Available options include bKash, Nagad, credit/debit cards, and other mobile banking services.
+          </Text>
+          <View className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+            <Text className="text-blue-700 dark:text-blue-300 text-sm">
+              <Feather name="info" size={14} className="inline" /> Note: Payment details will be securely handled by SSLCommerz after you tap "Place Order".
             </Text>
-            <TextInput
-              value={formData.cardNumber}
-              onChangeText={(value) => handleChange("cardNumber", value)}
-              placeholder="1234 5678 9012 3456"
-              keyboardType="numeric"
-              maxLength={19}
-              className={`h-12 px-4 bg-slate-50 dark:bg-slate-700 rounded-lg border ${
-                errors.cardNumber ? "border-red-500" : "border-slate-200 dark:border-slate-600"
-              } text-slate-900 dark:text-white`}
-            />
-            {errors.cardNumber && (
-              <Text className="text-red-500 text-xs mt-1">{errors.cardNumber}</Text>
-            )}
-          </View>
-          
-          <View className="mb-4">
-            <Text className="text-sm font-outfit-bold text-slate-700 dark:text-slate-300 mb-1">
-              Cardholder Name *
-            </Text>
-            <TextInput
-              value={formData.cardHolderName}
-              onChangeText={(value) => handleChange("cardHolderName", value)}
-              placeholder="John Doe"
-              className={`h-12 px-4 bg-slate-50 dark:bg-slate-700 rounded-lg border ${
-                errors.cardHolderName ? "border-red-500" : "border-slate-200 dark:border-slate-600"
-              } text-slate-900 dark:text-white`}
-            />
-            {errors.cardHolderName && (
-              <Text className="text-red-500 text-xs mt-1">{errors.cardHolderName}</Text>
-            )}
-          </View>
-          
-          <View className="grid grid-cols-2 gap-4 mb-4">
-            <View>
-              <Text className="text-sm font-outfit-bold text-slate-700 dark:text-slate-300 mb-1">
-                Expiry Date *
-              </Text>
-              <TextInput
-                value={formData.expiryDate}
-                onChangeText={(value) => handleChange("expiryDate", value)}
-                placeholder="MM/YY"
-                keyboardType="numeric"
-                maxLength={5}
-                className={`h-12 px-4 bg-slate-50 dark:bg-slate-700 rounded-lg border ${
-                  errors.expiryDate ? "border-red-500" : "border-slate-200 dark:border-slate-600"
-                } text-slate-900 dark:text-white`}
-              />
-              {errors.expiryDate && (
-                <Text className="text-red-500 text-xs mt-1">{errors.expiryDate}</Text>
-              )}
-            </View>
-            
-            <View>
-              <Text className="text-sm font-outfit-bold text-slate-700 dark:text-slate-300 mb-1">
-                CVV *
-              </Text>
-              <TextInput
-                value={formData.cvv}
-                onChangeText={(value) => handleChange("cvv", value)}
-                placeholder="123"
-                keyboardType="numeric"
-                maxLength={4}
-                secureTextEntry
-                className={`h-12 px-4 bg-slate-50 dark:bg-slate-700 rounded-lg border ${
-                  errors.cvv ? "border-red-500" : "border-slate-200 dark:border-slate-600"
-                } text-slate-900 dark:text-white`}
-              />
-              {errors.cvv && (
-                <Text className="text-red-500 text-xs mt-1">{errors.cvv}</Text>
-              )}
-            </View>
           </View>
         </View>
 
         {/* Place Order Button */}
         <TouchableOpacity
-          className="bg-indigo-600 h-14 rounded-xl items-center justify-center mt-4"
+          className={`h-14 rounded-xl items-center justify-center mt-4 ${cart.length > 0 && !isProcessing ? 'bg-indigo-600' : 'bg-gray-400'}`}
           onPress={handlePayment}
-          disabled={isProcessing}
+          disabled={isProcessing || cart.length === 0}
         >
           {isProcessing ? (
             <View className="flex-row items-center">
-              <Feather name="loader" size={20} color="#FFFFFF" className="animate-spin" />
+              <Feather
+                name="loader"
+                size={20}
+                color="#FFFFFF"
+                className="animate-spin"
+              />
               <Text className="text-white font-outfit-bold text-lg ml-2">
-                Processing...
+                Processing Payment...
               </Text>
             </View>
           ) : (
             <View className="flex-row items-center">
               <Text className="text-white font-outfit-bold text-lg">
-                Place Order - ${calculateTotal().toFixed(2)}
+                {cart.length > 0 ? `Place Order - $${calculateTotal().toFixed(2)}` : 'Cart is Empty'}
               </Text>
             </View>
           )}
         </TouchableOpacity>
       </ScrollView>
-      
+
       {/* SSLCommerz Payment WebView */}
       {showPaymentWebView && (
         <WebView
@@ -678,11 +695,11 @@ const CheckoutScreen: React.FC = () => {
           className="absolute top-0 left-0 w-full h-full bg-white z-10"
           onNavigationStateChange={(navState: WebViewNavigation) => {
             // Handle success, fail, and cancel redirects
-            if (navState.url.includes('success')) {
+            if (navState.url.includes("sslcommerz-success")) {
               handlePaymentSuccess();
-            } else if (navState.url.includes('fail')) {
+            } else if (navState.url.includes("sslcommerz-fail")) {
               handlePaymentFailure();
-            } else if (navState.url.includes('cancel')) {
+            } else if (navState.url.includes("sslcommerz-cancel")) {
               handlePaymentCancel();
             }
           }}

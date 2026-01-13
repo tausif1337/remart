@@ -24,7 +24,27 @@ The following dependencies are required:
 - `react-native-webview` - for displaying the payment page
 - `react-native-dotenv` - for environment variable management
 
+### Custom URL Scheme Configuration
+The app uses custom URL schemes for handling payment redirects:
+- Success: `myapp://sslcommerz-success`
+- Fail: `myapp://sslcommerz-fail`
+- Cancel: `myapp://sslcommerz-cancel`
+
+
 ## Configuration
+
+To properly handle the custom URL schemes in Expo, you need to configure your `app.json` file with the scheme property:
+
+```json
+{
+  "expo": {
+    "scheme": "myapp",
+    ...
+  }
+}
+```
+
+This allows the app to handle deep links with the `myapp://` prefix.
 
 ### API Service
 The `utils/apiService.ts` file contains:
@@ -40,7 +60,7 @@ In `screens/CheckoutScreen.tsx`:
 1. User fills out checkout form
 2. On payment submission, SSLCommerz payment is initiated
 3. A WebView opens showing the SSLCommerz payment page
-4. After payment completion, user is redirected back to the app
+4. After payment completion, user is redirected back to the app via custom URL scheme
 5. Success, failure, or cancellation is handled appropriately
 
 ## Testing with Sandbox
