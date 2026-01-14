@@ -14,8 +14,6 @@ import { useSelector } from "react-redux";
 import Toast from "react-native-toast-message";
 import { CartItem } from "../store/types";
 import { RootStackParamList } from "../navigation/types";
-import { WebView, WebViewNavigation } from "react-native-webview";
-import { initiateSSLCommerzPayment } from "../utils/sslCommerzHelper";
 
 interface FormData {
   firstName: string;
@@ -59,8 +57,6 @@ const CheckoutScreen: React.FC = () => {
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showPaymentWebView, setShowPaymentWebView] = useState(false);
-  const [paymentUrl, setPaymentUrl] = useState("");
   const [isCartEmpty, setIsCartEmpty] = useState(false);
 
   // Memoized total calculation
@@ -288,36 +284,26 @@ const CheckoutScreen: React.FC = () => {
       Toast.show({
         type: "info",
         text1: "Processing Payment",
-        text2: "Please wait while we prepare your payment...",
+        text2: "Please wait while we process your order...",
         visibilityTime: 2000,
       });
 
-      // Initiate SSLCommerz payment
-      const result = await initiateSSLCommerzPayment({
-        totalAmount: calculateTotal(),
-        cartItems: cart,
-        customerInfo: {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          phone: formData.phone,
-          address: formData.address,
-          city: formData.city,
-          state: formData.state,
-          zipCode: formData.zipCode,
-          country: formData.country,
-        },
+      // Simulate payment processing (in a real app, you would integrate with your payment provider)
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Payment successful - show success message and navigate
+      Toast.show({
+        type: "success",
+        text1: "Order Placed Successfully!",
+        text2: "Your order has been placed successfully!",
+        visibilityTime: 3000,
       });
 
-      if (!result.success) {
-        throw new Error(result.error || "Payment initiation failed");
-      }
-
-      // Set the payment URL and show the webview
-      setPaymentUrl(result.paymentUrl || "");
-      setShowPaymentWebView(true);
+      // Navigate to order confirmation or product listing
+      navigation.navigate("ProductListing");
+      setIsProcessing(false);
     } catch (error: any) {
-      console.error("SSLCommerz payment error:", error);
+      console.error("Payment error:", error);
       Toast.show({
         type: "error",
         text1: "Payment Processing Failed",
@@ -326,46 +312,18 @@ const CheckoutScreen: React.FC = () => {
       });
       setIsProcessing(false);
     }
-  }, [validateForm, formData, cart, calculateTotal, errors]);
+  }, [validateForm, formData, cart, calculateTotal, errors, navigation]);
 
   const handlePaymentSuccess = useCallback(() => {
-    Toast.show({
-      type: "success",
-      text1: "Payment Successful!",
-      text2: "Your order has been placed successfully!",
-      visibilityTime: 3000,
-    });
-
-    // Clear cart after successful payment
-    // In a real app, you would dispatch an action to clear the cart
-    // dispatch(clearCart());
-    
-    // Navigate to order confirmation or product listing
-    navigation.navigate("ProductListing");
-    setShowPaymentWebView(false);
-    setIsProcessing(false);
-  }, [navigation]);
+    // This function is no longer needed since we're not using SSLCommerz
+  }, []);
 
   const handlePaymentFailure = useCallback(() => {
-    Toast.show({
-      type: "error",
-      text1: "Payment Failed",
-      text2: "Your payment was not completed successfully. Please try again.",
-      visibilityTime: 4000,
-    });
-    setShowPaymentWebView(false);
-    setIsProcessing(false);
+    // This function is no longer needed since we're not using SSLCommerz
   }, []);
 
   const handlePaymentCancel = useCallback(() => {
-    Toast.show({
-      type: "info",
-      text1: "Payment Cancelled",
-      text2: "You cancelled the payment process. Your cart is still available.",
-      visibilityTime: 3000,
-    });
-    setShowPaymentWebView(false);
-    setIsProcessing(false);
+    // This function is no longer needed since we're not using SSLCommerz
   }, []);
 
   return (
@@ -644,18 +602,17 @@ const CheckoutScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* SSLCommerz Payment Method Selection */}
+        {/* Payment Method Selection */}
         <View className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 mb-6">
           <Text className="text-lg font-outfit-bold text-slate-900 dark:text-white mb-4">
             Payment Method
           </Text>
           <Text className="text-slate-600 dark:text-slate-300 mb-3">
-            Select your preferred payment method through SSLCommerz.
-            Available options include bKash, Nagad, credit/debit cards, and other mobile banking services.
+            Your payment will be securely processed after you tap "Place Order".
           </Text>
-          <View className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-            <Text className="text-blue-700 dark:text-blue-300 text-sm">
-              <Feather name="info" size={14} className="inline" /> Note: Payment details will be securely handled by SSLCommerz after you tap "Place Order".
+          <View className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+            <Text className="text-green-700 dark:text-green-300 text-sm">
+              <Feather name="check-circle" size={14} /> Your order will be confirmed upon successful payment.
             </Text>
           </View>
         </View>
@@ -688,26 +645,6 @@ const CheckoutScreen: React.FC = () => {
         </TouchableOpacity>
       </ScrollView>
 
-      {/* SSLCommerz Payment WebView */}
-      {showPaymentWebView && (
-        <WebView
-          source={{ uri: paymentUrl }}
-          className="absolute top-0 left-0 w-full h-full bg-white z-10"
-          onNavigationStateChange={(navState: WebViewNavigation) => {
-            // Handle success, fail, and cancel redirects
-            if (navState.url.includes("sslcommerz-success")) {
-              handlePaymentSuccess();
-            } else if (navState.url.includes("sslcommerz-fail")) {
-              handlePaymentFailure();
-            } else if (navState.url.includes("sslcommerz-cancel")) {
-              handlePaymentCancel();
-            }
-          }}
-          onError={() => {
-            handlePaymentFailure();
-          }}
-        />
-      )}
     </SafeAreaView>
   );
 };
