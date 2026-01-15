@@ -1,5 +1,6 @@
 /// <reference types="nativewind/types" />
 
 declare module '@env' {
-  // Add environment variable types here as needed
+  export const PAYSTATION_STORE_ID: string;
+  export const PAYSTATION_PASSWORD: string;
 }

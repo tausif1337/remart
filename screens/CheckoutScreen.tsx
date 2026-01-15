@@ -7,6 +7,8 @@ import {
   ScrollView,
   Alert,
   SafeAreaView,
+  Modal,
+  ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
@@ -14,6 +16,10 @@ import { useSelector } from "react-redux";
 import Toast from "react-native-toast-message";
 import { CartItem } from "../store/types";
 import { RootStackParamList } from "../navigation/types";
+import { WebView, WebViewNavigation } from "react-native-webview";
+import { apiService } from "../utils/apiService";
+
+const CALLBACK_URL = "https://remart-app.com/payment-callback";
 
 interface FormData {
   firstName: string;
@@ -44,20 +50,22 @@ const CheckoutScreen: React.FC = () => {
   const cart = useSelector((state: any) => state.cart.cart);
 
   const [formData, setFormData] = useState<FormData>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    address: "",
-    city: "",
-    state: "",
-    zipCode: "",
-    country: "",
+    firstName: "Md. Tausif",
+    lastName: "Hossain",
+    email: "tausif1337@gmail.com",
+    phone: "01748181448",
+    address: "53/A, Upazila Road, South Sastapur, Fatullah",
+    city: "Narayanganj",
+    state: "Narayanganj",
+    zipCode: "1420",
+    country: "Bangladesh",
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isCartEmpty, setIsCartEmpty] = useState(false);
+  const [showWebView, setShowWebView] = useState(false);
+  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
+  const [currentInvoice, setCurrentInvoice] = useState<string | null>(null);
 
   // Memoized total calculation
   const totalAmount = useMemo(() => {
@@ -269,11 +277,6 @@ const CheckoutScreen: React.FC = () => {
         text2: "Please fix all highlighted fields before proceeding",
         visibilityTime: 3000,
       });
-      // Scroll to first error field
-      const firstErrorField = Object.keys(errors).find(key => errors[key as keyof FormErrors]);
-      if (firstErrorField) {
-        // We could implement scrolling to the error field if needed
-      }
       return;
     }
 
@@ -283,36 +286,114 @@ const CheckoutScreen: React.FC = () => {
       // Show processing toast
       Toast.show({
         type: "info",
-        text1: "Processing Payment",
-        text2: "Please wait while we process your order...",
+        text1: "Processing Order",
+        text2: "Generating payment link...",
         visibilityTime: 2000,
       });
 
-      // Simulate payment processing (in a real app, you would integrate with your payment provider)
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const invoiceNumber = `INV-${Date.now()}`;
+      setCurrentInvoice(invoiceNumber);
 
-      // Payment successful - show success message and navigate
-      Toast.show({
-        type: "success",
-        text1: "Order Placed Successfully!",
-        text2: "Your order has been placed successfully!",
-        visibilityTime: 3000,
+      // Process payment through real PayStation API
+      const response = await apiService.initiatePayment({
+        invoice_number: invoiceNumber,
+        currency: "BDT",
+        payment_amount: Math.round(totalAmount),
+        cust_name: `${formData.firstName} ${formData.lastName}`,
+        cust_phone: formData.phone,
+        cust_email: formData.email,
+        cust_address: formData.address,
+        callback_url: CALLBACK_URL,
+        reference: "App Purchase",
       });
 
-      // Navigate to order confirmation or product listing
-      navigation.navigate("ProductListing");
-      setIsProcessing(false);
+      if (response.status === "success" && response.payment_url) {
+        setPaymentUrl(response.payment_url);
+        setShowWebView(true);
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Payment Initiation Failed",
+          text2: response.message || "Could not create payment link. Please try again.",
+          visibilityTime: 4000,
+        });
+      }
     } catch (error: any) {
-      console.error("Payment error:", error);
+      console.error("Payment processing error:", error);
       Toast.show({
         type: "error",
-        text1: "Payment Processing Failed",
-        text2: error.message || "An error occurred during payment processing. Please try again.",
+        text1: "Payment Error",
+        text2: "An unexpected error occurred. Please try again.",
         visibilityTime: 4000,
       });
+    } finally {
       setIsProcessing(false);
     }
-  }, [validateForm, formData, cart, calculateTotal, errors, navigation]);
+  }, [validateForm, formData, cart, totalAmount, navigation]);
+
+  const handleNavigationStateChange = (navState: WebViewNavigation) => {
+    const { url } = navState;
+
+    if (url.startsWith(CALLBACK_URL)) {
+      setShowWebView(false);
+      setPaymentUrl(null);
+
+      // Parse parameters from URL
+      const queryString = url.split("?")[1];
+      const params = new URLSearchParams(queryString);
+      
+      const status = params.get("status");
+      const invoiceNumber = params.get("invoice_number");
+      const trxId = params.get("trx_id");
+
+      if (status === "Successful") {
+        Toast.show({
+          type: "success",
+          text1: "Payment Successful!",
+          text2: `Transaction ID: ${trxId}`,
+          visibilityTime: 3000,
+        });
+
+        // Prepare order details for confirmation screen
+        const orderDetails = {
+          orderId: invoiceNumber || currentInvoice || "N/A",
+          transactionId: trxId || "N/A",
+          amount: totalAmount,
+          customerName: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          items: cart.map((item: CartItem) => ({
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price
+          })),
+          shippingAddress: {
+            address: formData.address,
+            city: formData.city,
+            state: formData.state,
+            zipCode: formData.zipCode,
+            country: formData.country
+          },
+          orderDate: new Date().toISOString()
+        };
+
+        navigation.navigate("OrderConfirmation", { orderDetails });
+      } else if (status === "Canceled") {
+        Toast.show({
+          type: "info",
+          text1: "Payment Canceled",
+          text2: "You have canceled the payment process. Your cart items are safe.",
+          visibilityTime: 4000,
+        });
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Payment Failed",
+          text2: "The payment transaction failed or was declined. Please try again.",
+          visibilityTime: 4000,
+        });
+      }
+    }
+  };
 
   const handlePaymentSuccess = useCallback(() => {
     // This function is no longer needed since we're not using SSLCommerz
@@ -607,12 +688,25 @@ const CheckoutScreen: React.FC = () => {
           <Text className="text-lg font-outfit-bold text-slate-900 dark:text-white mb-4">
             Payment Method
           </Text>
-          <Text className="text-slate-600 dark:text-slate-300 mb-3">
-            Your payment will be securely processed after you tap "Place Order".
-          </Text>
-          <View className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+          <View className="flex-row items-center p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl">
+            <View className="w-12 h-12 bg-white dark:bg-slate-700 rounded-full items-center justify-center mr-4 shadow-sm">
+              <Feather name="credit-card" size={24} color="#4F46E5" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-base font-outfit-bold text-slate-900 dark:text-white">
+                PayStation
+              </Text>
+              <Text className="text-sm text-slate-600 dark:text-slate-400">
+                Secure Hosted Payment
+              </Text>
+            </View>
+            <View className="bg-indigo-600 rounded-full p-1">
+              <Feather name="check" size={14} color="#FFFFFF" />
+            </View>
+          </View>
+          <View className="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
             <Text className="text-green-700 dark:text-green-300 text-sm">
-              <Feather name="check-circle" size={14} /> Your order will be confirmed upon successful payment.
+              <Feather name="shield" size={14} /> Your payment is encrypted and processed securely by PayStation.
             </Text>
           </View>
         </View>
@@ -644,6 +738,47 @@ const CheckoutScreen: React.FC = () => {
           )}
         </TouchableOpacity>
       </ScrollView>
+
+      {/* PayStation Payment Modal */}
+      <Modal
+        visible={showWebView}
+        animationType="slide"
+        onRequestClose={() => setShowWebView(false)}
+      >
+        <SafeAreaView className="flex-1 bg-white">
+          <View className="flex-row items-center justify-between px-4 py-3 border-b border-slate-100">
+            <Text className="text-lg font-outfit-bold text-slate-900">PayStation Payment</Text>
+            <TouchableOpacity
+              onPress={() => {
+                setShowWebView(false);
+                setPaymentUrl(null);
+                Toast.show({
+                  type: "info",
+                  text1: "Payment Closed",
+                  text2: "Payment window was closed. Your cart remains intact.",
+                  visibilityTime: 4000,
+                });
+              }}
+            >
+              <Feather name="x" size={24} color="#1E293B" />
+            </TouchableOpacity>
+          </View>
+          {paymentUrl ? (
+            <WebView
+              source={{ uri: paymentUrl }}
+              onNavigationStateChange={handleNavigationStateChange}
+              startInLoadingState={true}
+              javaScriptEnabled={true}
+              domStorageEnabled={true}
+              renderLoading={() => (
+                <View className="absolute inset-0 items-center justify-center bg-white">
+                  <ActivityIndicator size="large" color="#4F46E5" />
+                </View>
+              )}
+            />
+          ) : null}
+        </SafeAreaView>
+      </Modal>
 
     </SafeAreaView>
   );
