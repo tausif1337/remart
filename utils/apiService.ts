@@ -1,69 +1,84 @@
 import axios from "axios";
-import { PAYSTATION_STORE_ID, PAYSTATION_PASSWORD } from "@env";
+import { SSLCOMMERZ_STORE_ID, SSLCOMMERZ_STORE_PASSWORD } from "@env";
 
-const PAYSTATION_API_URL = "https://api.paystation.com.bd";
+const SSLCOMMERZ_API_URL = "https://sandbox.sslcommerz.com/gwprocess/v4/api.php";
 
-export interface PayStationRequest {
-  invoice_number: string;
+export interface SSLCommerzRequest {
+  total_amount: number;
   currency: string;
-  payment_amount: number;
-  reference?: string;
-  cust_name: string;
-  cust_phone: string;
-  cust_email: string;
-  cust_address?: string;
-  callback_url: string;
-  checkout_items?: string;
+  tran_id: string;
+  success_url: string;
+  fail_url: string;
+  cancel_url: string;
+  cus_name: string;
+  cus_email: string;
+  cus_add1: string;
+  cus_city: string;
+  cus_state: string;
+  cus_postcode: string;
+  cus_country: string;
+  cus_phone: string;
+  shipping_method: string;
+  product_name: string;
+  product_category: string;
+  product_profile: string;
 }
 
-export interface PayStationResponse {
-  status_code: string;
+export interface SSLCommerzResponse {
   status: string;
-  message: string;
-  payment_amount?: string;
-  invoice_number?: string;
-  payment_url?: string;
+  failedreason?: string;
+  sessionkey?: string;
+  GatewayPageURL?: string;
 }
 
 export const apiService = {
-  initiatePayment: async (data: PayStationRequest): Promise<PayStationResponse> => {
+  initiatePayment: async (data: SSLCommerzRequest): Promise<SSLCommerzResponse> => {
     try {
-      const cleanStoreId = PAYSTATION_STORE_ID.replace(/['"]/g, "").trim();
-      const cleanPassword = PAYSTATION_PASSWORD.replace(/['"]/g, "").trim();
+      const cleanStoreId = (SSLCOMMERZ_STORE_ID || "").replace(/['"]/g, "").trim();
+      const cleanPassword = (SSLCOMMERZ_STORE_PASSWORD || "").replace(/['"]/g, "").trim();
 
-      const formData = new FormData();
-      formData.append("merchantId", cleanStoreId);
-      formData.append("merchant_id", cleanStoreId);
-      formData.append("password", cleanPassword);
-      formData.append("store_id", cleanStoreId);
-      formData.append("store_pass", cleanPassword);
-      
-      formData.append("invoice_number", data.invoice_number);
-      formData.append("currency", data.currency);
-      formData.append("payment_amount", Math.round(data.payment_amount).toString());
-      formData.append("cust_name", data.cust_name);
-      formData.append("cust_phone", data.cust_phone);
-      formData.append("cust_email", data.cust_email);
-      formData.append("callback_url", data.callback_url);
-      
-      if (data.reference) formData.append("reference", data.reference);
-      if (data.cust_address) formData.append("cust_address", data.cust_address);
-      if (data.checkout_items) formData.append("checkout_items", data.checkout_items);
+      const params = new URLSearchParams();
+      params.append("store_id", cleanStoreId);
+      params.append("store_passwd", cleanPassword);
+      params.append("total_amount", data.total_amount.toString());
+      params.append("currency", data.currency);
+      params.append("tran_id", data.tran_id);
+      params.append("success_url", data.success_url);
+      params.append("fail_url", data.fail_url);
+      params.append("cancel_url", data.cancel_url);
+      params.append("cus_name", data.cus_name);
+      params.append("cus_email", data.cus_email);
+      params.append("cus_add1", data.cus_add1);
+      params.append("cus_city", data.cus_city);
+      params.append("cus_state", data.cus_state);
+      params.append("cus_postcode", data.cus_postcode);
+      params.append("cus_country", data.cus_country);
+      params.append("cus_phone", data.cus_phone);
+      params.append("shipping_method", data.shipping_method);
+      params.append("product_name", data.product_name);
+      params.append("product_category", data.product_category);
+      params.append("product_profile", data.product_profile);
 
-      const response = await axios.post(`${PAYSTATION_API_URL}/initiate-payment`, formData, {
+      console.log("SSLCommerz Request:", params.toString().replace(/store_passwd=[^&]*/, "store_passwd=********"));
+
+      const response = await axios.post(SSLCOMMERZ_API_URL, params.toString(), {
         headers: {
-          "Accept": "application/json",
-          // Let Axios handle Content-Type boundary for FormData
+          "Content-Type": "application/x-www-form-urlencoded",
         },
       });
 
+      console.log("SSLCommerz Response:", response.data);
+
       return response.data;
     } catch (error: any) {
-      console.error("PayStation API Error:", error.response?.data || error.message);
+      if (error.response) {
+        console.error("SSLCommerz API Error Response:", error.response.data);
+      } else {
+        console.error("SSLCommerz API Error:", error.message);
+      }
       return {
-        status_code: error.response?.status.toString() || "500",
-        status: "failed",
-        message: error.message || "Internal Server Error",
+        status: "FAILED",
+        failedreason: error.message,
       };
     }
   },

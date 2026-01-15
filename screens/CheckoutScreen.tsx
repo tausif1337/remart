@@ -19,7 +19,9 @@ import { RootStackParamList } from "../navigation/types";
 import { WebView, WebViewNavigation } from "react-native-webview";
 import { apiService } from "../utils/apiService";
 
-const CALLBACK_URL = "https://remart-app.com/payment-callback";
+const SUCCESS_URL = "https://remart-app.com/payment-success";
+const FAIL_URL = "https://remart-app.com/payment-fail";
+const CANCEL_URL = "https://remart-app.com/payment-cancel";
 
 interface FormData {
   firstName: string;
@@ -191,15 +193,16 @@ const CheckoutScreen: React.FC = () => {
     if (field === "address") {
       // Capitalize the first letter of each sentence and normalize spaces
       const formattedValue = value
-        .split('. ')  // Split by period followed by space
-        .map(sentence => 
-          sentence.charAt(0).toUpperCase() + sentence.slice(1).toLowerCase()
+        .split(". ") // Split by period followed by space
+        .map(
+          (sentence) =>
+            sentence.charAt(0).toUpperCase() + sentence.slice(1).toLowerCase()
         )
-        .join('. ');
-      setFormData(prev => ({ ...prev, [field]: formattedValue }));
-        
+        .join(". ");
+      setFormData((prev) => ({ ...prev, [field]: formattedValue }));
+
       // Clear error when user starts typing
-      setErrors(prev => {
+      setErrors((prev) => {
         if (prev[field]) {
           const newErrors = { ...prev };
           delete newErrors[field];
@@ -211,10 +214,10 @@ const CheckoutScreen: React.FC = () => {
     // Format ZIP code as user types
     else if (field === "zipCode") {
       const alphanumericValue = value.replace(/[^A-Za-z0-9\s\-]/g, "");
-      setFormData(prev => ({ ...prev, [field]: alphanumericValue }));
-        
+      setFormData((prev) => ({ ...prev, [field]: alphanumericValue }));
+
       // Clear error when user starts typing
-      setErrors(prev => {
+      setErrors((prev) => {
         if (prev[field]) {
           const newErrors = { ...prev };
           delete newErrors[field];
@@ -226,10 +229,10 @@ const CheckoutScreen: React.FC = () => {
     // Format phone number as user types
     else if (field === "phone") {
       const phoneValue = value.replace(/[^+\d\s\-\(\)]/g, "");
-      setFormData(prev => ({ ...prev, [field]: phoneValue }));
-        
+      setFormData((prev) => ({ ...prev, [field]: phoneValue }));
+
       // Clear error when user starts typing
-      setErrors(prev => {
+      setErrors((prev) => {
         if (prev[field]) {
           const newErrors = { ...prev };
           delete newErrors[field];
@@ -240,11 +243,11 @@ const CheckoutScreen: React.FC = () => {
     }
     // Format city and state to capitalize first letter of each word
     else if (field === "city" || field === "state" || field === "country") {
-      const capitalizedValue = value.replace(/\b\w/g, l => l.toUpperCase());
-      setFormData(prev => ({ ...prev, [field]: capitalizedValue }));
-      
+      const capitalizedValue = value.replace(/\b\w/g, (l) => l.toUpperCase());
+      setFormData((prev) => ({ ...prev, [field]: capitalizedValue }));
+
       // Clear error when user starts typing
-      setErrors(prev => {
+      setErrors((prev) => {
         if (prev[field]) {
           const newErrors = { ...prev };
           delete newErrors[field];
@@ -255,10 +258,10 @@ const CheckoutScreen: React.FC = () => {
     }
     // For other fields
     else {
-      setFormData(prev => ({ ...prev, [field]: value }));
-        
+      setFormData((prev) => ({ ...prev, [field]: value }));
+
       // Clear error when user starts typing
-      setErrors(prev => {
+      setErrors((prev) => {
         if (prev[field]) {
           const newErrors = { ...prev };
           delete newErrors[field];
@@ -280,7 +283,10 @@ const CheckoutScreen: React.FC = () => {
       return;
     }
 
+    const invoiceNumber = `INV-${Date.now()}`;
+    setCurrentInvoice(invoiceNumber);
     setIsProcessing(true);
+    console.log("Initiating payment process for invoice:", invoiceNumber);
 
     try {
       // Show processing toast
@@ -291,30 +297,50 @@ const CheckoutScreen: React.FC = () => {
         visibilityTime: 2000,
       });
 
-      const invoiceNumber = `INV-${Date.now()}`;
-      setCurrentInvoice(invoiceNumber);
-
-      // Process payment through real PayStation API
+      // Process payment through SSLCommerz API
       const response = await apiService.initiatePayment({
-        invoice_number: invoiceNumber,
+        total_amount: Math.round(totalAmount),
         currency: "BDT",
-        payment_amount: Math.round(totalAmount),
-        cust_name: `${formData.firstName} ${formData.lastName}`,
-        cust_phone: formData.phone,
-        cust_email: formData.email,
-        cust_address: formData.address,
-        callback_url: CALLBACK_URL,
-        reference: "App Purchase",
+        tran_id: invoiceNumber,
+        success_url: SUCCESS_URL,
+        fail_url: FAIL_URL,
+        cancel_url: CANCEL_URL,
+        cus_name: `${formData.firstName} ${formData.lastName}`,
+        cus_email: formData.email,
+        cus_add1: formData.address,
+        cus_city: formData.city,
+        cus_state: formData.state,
+        cus_postcode: formData.zipCode,
+        cus_country: formData.country,
+        cus_phone: formData.phone,
+        shipping_method: "NO",
+        product_name: cart.map((item: CartItem) => item.name).join(", "),
+        product_category: "General",
+        product_profile: "general",
       });
 
-      if (response.status === "success" && response.payment_url) {
-        setPaymentUrl(response.payment_url);
+      console.log("Payment initiation response received:", response);
+
+      if (response.status === "SUCCESS" && response.GatewayPageURL) {
+        console.log(
+          "Payment URL generated successfully:",
+          response.GatewayPageURL
+        );
+        setPaymentUrl(response.GatewayPageURL);
         setShowWebView(true);
       } else {
+        console.warn(
+          "Payment initiation failed with status:",
+          response.status,
+          "Message:",
+          response.failedreason
+        );
         Toast.show({
           type: "error",
           text1: "Payment Initiation Failed",
-          text2: response.message || "Could not create payment link. Please try again.",
+          text2:
+            response.failedreason ||
+            "Could not create payment link. Please try again.",
           visibilityTime: 4000,
         });
       }
@@ -334,78 +360,62 @@ const CheckoutScreen: React.FC = () => {
   const handleNavigationStateChange = (navState: WebViewNavigation) => {
     const { url } = navState;
 
-    if (url.startsWith(CALLBACK_URL)) {
+    if (url.startsWith(SUCCESS_URL)) {
       setShowWebView(false);
       setPaymentUrl(null);
 
-      // Parse parameters from URL
-      const queryString = url.split("?")[1];
-      const params = new URLSearchParams(queryString);
-      
-      const status = params.get("status");
-      const invoiceNumber = params.get("invoice_number");
-      const trxId = params.get("trx_id");
+      Toast.show({
+        type: "success",
+        text1: "Payment Successful!",
+        text2: `Order: ${currentInvoice}`,
+        visibilityTime: 3000,
+      });
 
-      if (status === "Successful") {
-        Toast.show({
-          type: "success",
-          text1: "Payment Successful!",
-          text2: `Transaction ID: ${trxId}`,
-          visibilityTime: 3000,
-        });
+      // Prepare order details for confirmation screen
+      const orderDetails = {
+        orderId: currentInvoice || "N/A",
+        transactionId: "SSL-" + Date.now(),
+        amount: totalAmount,
+        customerName: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email,
+        items: cart.map((item: CartItem) => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        shippingAddress: {
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode,
+          country: formData.country,
+        },
+        orderDate: new Date().toISOString(),
+      };
 
-        // Prepare order details for confirmation screen
-        const orderDetails = {
-          orderId: invoiceNumber || currentInvoice || "N/A",
-          transactionId: trxId || "N/A",
-          amount: totalAmount,
-          customerName: `${formData.firstName} ${formData.lastName}`,
-          email: formData.email,
-          items: cart.map((item: CartItem) => ({
-            name: item.name,
-            quantity: item.quantity,
-            price: item.price
-          })),
-          shippingAddress: {
-            address: formData.address,
-            city: formData.city,
-            state: formData.state,
-            zipCode: formData.zipCode,
-            country: formData.country
-          },
-          orderDate: new Date().toISOString()
-        };
-
-        navigation.navigate("OrderConfirmation", { orderDetails });
-      } else if (status === "Canceled") {
-        Toast.show({
-          type: "info",
-          text1: "Payment Canceled",
-          text2: "You have canceled the payment process. Your cart items are safe.",
-          visibilityTime: 4000,
-        });
-      } else {
-        Toast.show({
-          type: "error",
-          text1: "Payment Failed",
-          text2: "The payment transaction failed or was declined. Please try again.",
-          visibilityTime: 4000,
-        });
-      }
+      navigation.navigate("OrderConfirmation", { orderDetails });
+    } else if (url.startsWith(CANCEL_URL)) {
+      setShowWebView(false);
+      setPaymentUrl(null);
+      Toast.show({
+        type: "info",
+        text1: "Payment Canceled",
+        text2:
+          "You have canceled the payment process. Your cart items are safe.",
+        visibilityTime: 4000,
+      });
+    } else if (url.startsWith(FAIL_URL)) {
+      setShowWebView(false);
+      setPaymentUrl(null);
+      Toast.show({
+        type: "error",
+        text1: "Payment Failed",
+        text2:
+          "The payment transaction failed or was declined. Please try again.",
+        visibilityTime: 4000,
+      });
     }
   };
-
-  const handlePaymentSuccess = useCallback(() => {
-    // This function is no longer needed since we're not using SSLCommerz
-  }, []);
-
-  const handlePaymentFailure = useCallback(() => {
-    // This function is no longer needed since we're not using SSLCommerz
-  }, []);
-
-  const handlePaymentCancel = useCallback(() => {
-    // This function is no longer needed since we're not using SSLCommerz
-  }, []);
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50 dark:bg-slate-900">
@@ -467,9 +477,9 @@ const CheckoutScreen: React.FC = () => {
               ${totalAmount.toFixed(2)}
             </Text>
           </View>
-          <TouchableOpacity 
+          <TouchableOpacity
             className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700"
-            onPress={() => navigation.navigate('Cart')}
+            onPress={() => navigation.navigate("Cart")}
           >
             <Text className="text-indigo-600 dark:text-indigo-400 text-center font-outfit-medium">
               Edit Cart
@@ -694,7 +704,7 @@ const CheckoutScreen: React.FC = () => {
             </View>
             <View className="flex-1">
               <Text className="text-base font-outfit-bold text-slate-900 dark:text-white">
-                PayStation
+                SSLCommerz
               </Text>
               <Text className="text-sm text-slate-600 dark:text-slate-400">
                 Secure Hosted Payment
@@ -706,14 +716,17 @@ const CheckoutScreen: React.FC = () => {
           </View>
           <View className="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
             <Text className="text-green-700 dark:text-green-300 text-sm">
-              <Feather name="shield" size={14} /> Your payment is encrypted and processed securely by PayStation.
+              <Feather name="shield" size={14} /> Your payment is encrypted and
+              processed securely by SSLCommerz.
             </Text>
           </View>
         </View>
 
         {/* Place Order Button */}
         <TouchableOpacity
-          className={`h-14 rounded-xl items-center justify-center mt-4 ${cart.length > 0 && !isProcessing ? 'bg-indigo-600' : 'bg-gray-400'}`}
+          className={`h-14 rounded-xl items-center justify-center mt-4 ${
+            cart.length > 0 && !isProcessing ? "bg-indigo-600" : "bg-gray-400"
+          }`}
           onPress={handlePayment}
           disabled={isProcessing || cart.length === 0}
         >
@@ -732,14 +745,16 @@ const CheckoutScreen: React.FC = () => {
           ) : (
             <View className="flex-row items-center">
               <Text className="text-white font-outfit-bold text-lg">
-                {cart.length > 0 ? `Place Order - $${calculateTotal().toFixed(2)}` : 'Cart is Empty'}
+                {cart.length > 0
+                  ? `Place Order - $${calculateTotal().toFixed(2)}`
+                  : "Cart is Empty"}
               </Text>
             </View>
           )}
         </TouchableOpacity>
       </ScrollView>
 
-      {/* PayStation Payment Modal */}
+      {/* SSLCommerz Payment Modal */}
       <Modal
         visible={showWebView}
         animationType="slide"
@@ -747,7 +762,9 @@ const CheckoutScreen: React.FC = () => {
       >
         <SafeAreaView className="flex-1 bg-white">
           <View className="flex-row items-center justify-between px-4 py-3 border-b border-slate-100">
-            <Text className="text-lg font-outfit-bold text-slate-900">PayStation Payment</Text>
+            <Text className="text-lg font-outfit-bold text-slate-900">
+              SSLCommerz Payment
+            </Text>
             <TouchableOpacity
               onPress={() => {
                 setShowWebView(false);
@@ -779,7 +796,6 @@ const CheckoutScreen: React.FC = () => {
           ) : null}
         </SafeAreaView>
       </Modal>
-
     </SafeAreaView>
   );
 };
