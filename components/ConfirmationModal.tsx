@@ -25,7 +25,10 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
       onRequestClose={onClose}
     >
       <View style={styles.bottomModalContainer}>
-        <View style={styles.bottomModalContent} className="bg-white dark:bg-slate-800">
+        <View
+          style={styles.bottomModalContent}
+          className="bg-white dark:bg-slate-800"
+        >
           <View className="items-center mb-4">
             <View className="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-full items-center justify-center mb-3">
               <Feather name="alert-triangle" size={24} color="#DC2626" />
@@ -34,11 +37,11 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
               {title}
             </Text>
           </View>
-          
+
           <Text className="text-slate-600 dark:text-slate-300 text-center mb-6">
             {message}
           </Text>
-          
+
           <View className="flex-row justify-between w-full">
             <TouchableOpacity
               onPress={onClose}
@@ -48,7 +51,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                 Cancel
               </Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               onPress={onConfirm}
               className="flex-1 ml-2 h-12 bg-red-600 rounded-lg items-center justify-center"
@@ -68,16 +71,16 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 const styles = StyleSheet.create({
   bottomModalContainer: {
     flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   bottomModalContent: {
-    width: '100%',
+    width: "100%",
     padding: 24,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
 });
 
