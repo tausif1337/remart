@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import type { Product, Review, CartItem } from "./types.ts";
+import type { Product, Review, CartItem } from "./types";
 
 interface CartState {
   products: Product[];
@@ -671,9 +671,12 @@ export const cartSlice = createSlice({
         item.quantity = quantity;
       }
     },
+    clearCart: (state) => {
+      state.cart = [];
+    },
   },
 });
 
-export const { addToCart, removeFromCart, updateCartQuantity } =
+export const { addToCart, removeFromCart, updateCartQuantity, clearCart } =
   cartSlice.actions;
 export default cartSlice.reducer;

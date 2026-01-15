@@ -12,9 +12,10 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import Toast from "react-native-toast-message";
 import { CartItem } from "../store/types";
+import { clearCart } from "../store/cartSlice";
 import { RootStackParamList } from "../navigation/types";
 import { WebView, WebViewNavigation } from "react-native-webview";
 import { apiService } from "../utils/apiService";
@@ -47,8 +48,25 @@ interface FormErrors {
   country?: string;
 }
 
+// Validation functions
+const validateEmail = (email: string) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const validatePhone = (phone: string) => {
+  const phoneRegex = /^\+?[\d\s\-\(\)]{10,}$/;
+  return phoneRegex.test(phone);
+};
+
+const validateZipCode = (zipCode: string) => {
+  const zipRegex = /^[A-Za-z0-9\s\-]{3,10}$/;
+  return zipRegex.test(zipCode);
+};
+
 const CheckoutScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const dispatch = useDispatch();
   const cart = useSelector((state: any) => state.cart.cart);
 
   const [formData, setFormData] = useState<FormData>({
@@ -76,54 +94,6 @@ const CheckoutScreen: React.FC = () => {
       0
     );
   }, [cart]);
-
-  // Calculate total amount
-  const calculateTotal = () => {
-    return totalAmount;
-  };
-
-  // Validation functions
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const validatePhone = (phone: string) => {
-    const phoneRegex = /^\+?[\d\s\-\(\)]{10,}$/;
-    return phoneRegex.test(phone);
-  };
-
-  const validateCardNumber = (cardNumber: string) => {
-    const cardRegex = /^\d{4}\s?\d{4}\s?\d{4}\s?\d{4}$/;
-    return cardRegex.test(cardNumber.replace(/\s/g, ""));
-  };
-
-  const validateExpiryDate = (expiryDate: string) => {
-    const expiryRegex = /^(0[1-9]|1[0-2])\/?([0-9]{2})$/;
-    if (!expiryRegex.test(expiryDate)) return false;
-
-    const [month, year] = expiryDate.split(/\/|\s+/);
-    const currentYear = new Date().getFullYear() % 100;
-    const currentMonth = new Date().getMonth() + 1;
-
-    const expYear = parseInt(year, 10);
-    const expMonth = parseInt(month, 10);
-
-    if (expYear < currentYear) return false;
-    if (expYear === currentYear && expMonth < currentMonth) return false;
-
-    return true;
-  };
-
-  const validateCVV = (cvv: string) => {
-    const cvvRegex = /^\d{3,4}$/;
-    return cvvRegex.test(cvv);
-  };
-
-  const validateZipCode = (zipCode: string) => {
-    const zipRegex = /^[A-Za-z0-9\s\-]{3,10}$/;
-    return zipRegex.test(zipCode);
-  };
 
   const validateForm = useCallback((): boolean => {
     const newErrors: FormErrors = {};
@@ -186,19 +156,13 @@ const CheckoutScreen: React.FC = () => {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [formData, validateEmail, validatePhone, validateZipCode]);
+  }, [formData]);
 
   const handleChange = useCallback((field: keyof FormData, value: string) => {
     // Format address as user types
     if (field === "address") {
-      // Capitalize the first letter of each sentence and normalize spaces
-      const formattedValue = value
-        .split(". ") // Split by period followed by space
-        .map(
-          (sentence) =>
-            sentence.charAt(0).toUpperCase() + sentence.slice(1).toLowerCase()
-        )
-        .join(". ");
+      // Capitalize the first letter of each word and normalize spaces
+      const formattedValue = value.replace(/\b\w/g, (l) => l.toUpperCase());
       setFormData((prev) => ({ ...prev, [field]: formattedValue }));
 
       // Clear error when user starts typing
@@ -299,7 +263,7 @@ const CheckoutScreen: React.FC = () => {
 
       // Process payment through SSLCommerz API
       const response = await apiService.initiatePayment({
-        total_amount: Math.round(totalAmount),
+        total_amount: Number(totalAmount.toFixed(2)),
         currency: "BDT",
         tran_id: invoiceNumber,
         success_url: SUCCESS_URL,
@@ -357,65 +321,85 @@ const CheckoutScreen: React.FC = () => {
     }
   }, [validateForm, formData, cart, totalAmount, navigation]);
 
-  const handleNavigationStateChange = (navState: WebViewNavigation) => {
-    const { url } = navState;
+  const handleNavigationStateChange = useCallback(
+    (navState: WebViewNavigation) => {
+      const { url } = navState;
+      console.log("WebView navigating to:", url);
 
-    if (url.startsWith(SUCCESS_URL)) {
-      setShowWebView(false);
-      setPaymentUrl(null);
+      if (url.startsWith(SUCCESS_URL)) {
+        console.log("Payment success detected!");
+        setShowWebView(false);
+        setPaymentUrl(null);
 
-      Toast.show({
-        type: "success",
-        text1: "Payment Successful!",
-        text2: `Order: ${currentInvoice}`,
-        visibilityTime: 3000,
-      });
+        Toast.show({
+          type: "success",
+          text1: "Payment Successful!",
+          text2: `Order: ${currentInvoice}`,
+          visibilityTime: 3000,
+        });
 
-      // Prepare order details for confirmation screen
-      const orderDetails = {
-        orderId: currentInvoice || "N/A",
-        transactionId: "SSL-" + Date.now(),
-        amount: totalAmount,
-        customerName: `${formData.firstName} ${formData.lastName}`,
-        email: formData.email,
-        items: cart.map((item: CartItem) => ({
-          name: item.name,
-          quantity: item.quantity,
-          price: item.price,
-        })),
-        shippingAddress: {
-          address: formData.address,
-          city: formData.city,
-          state: formData.state,
-          zipCode: formData.zipCode,
-          country: formData.country,
-        },
-        orderDate: new Date().toISOString(),
-      };
+        // Clear the cart on successful payment
+        dispatch(clearCart());
+        console.log("Cart cleared after successful payment");
 
-      navigation.navigate("OrderConfirmation", { orderDetails });
-    } else if (url.startsWith(CANCEL_URL)) {
-      setShowWebView(false);
-      setPaymentUrl(null);
-      Toast.show({
-        type: "info",
-        text1: "Payment Canceled",
-        text2:
-          "You have canceled the payment process. Your cart items are safe.",
-        visibilityTime: 4000,
-      });
-    } else if (url.startsWith(FAIL_URL)) {
-      setShowWebView(false);
-      setPaymentUrl(null);
-      Toast.show({
-        type: "error",
-        text1: "Payment Failed",
-        text2:
-          "The payment transaction failed or was declined. Please try again.",
-        visibilityTime: 4000,
-      });
-    }
-  };
+        // Prepare order details for confirmation screen
+        const orderDetails = {
+          orderId: currentInvoice || "N/A",
+          transactionId: "SSL-" + Date.now(),
+          amount: totalAmount,
+          customerName: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          items: cart.map((item: CartItem) => ({
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+          shippingAddress: {
+            address: formData.address,
+            city: formData.city,
+            state: formData.state,
+            zipCode: formData.zipCode,
+            country: formData.country,
+          },
+          orderDate: new Date().toISOString(),
+        };
+
+        navigation.navigate("OrderConfirmation", { orderDetails });
+      } else if (url.startsWith(CANCEL_URL)) {
+        console.log("Payment cancel detected");
+        setShowWebView(false);
+        setPaymentUrl(null);
+        Toast.show({
+          type: "info",
+          text1: "Payment Canceled",
+          text2:
+            "You have canceled the payment process. Your cart items are safe.",
+          visibilityTime: 4000,
+        });
+      } else if (url.startsWith(FAIL_URL)) {
+        console.log("Payment fail detected");
+        setShowWebView(false);
+        setPaymentUrl(null);
+        Toast.show({
+          type: "error",
+          text1: "Payment Failed",
+          text2:
+            "The payment transaction failed or was declined. Please try again.",
+          visibilityTime: 4000,
+        });
+      }
+    },
+    [
+      currentInvoice,
+      totalAmount,
+      formData,
+      cart,
+      navigation,
+      dispatch,
+      setShowWebView,
+      setPaymentUrl,
+    ]
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50 dark:bg-slate-900">
@@ -746,7 +730,7 @@ const CheckoutScreen: React.FC = () => {
             <View className="flex-row items-center">
               <Text className="text-white font-outfit-bold text-lg">
                 {cart.length > 0
-                  ? `Place Order - $${calculateTotal().toFixed(2)}`
+                  ? `Place Order - $${totalAmount.toFixed(2)}`
                   : "Cart is Empty"}
               </Text>
             </View>
