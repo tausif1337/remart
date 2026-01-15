@@ -96,7 +96,7 @@ export default function ProductCard({ product, onPress }: ProductCardProps) {
 
         <View className="flex-row items-center justify-between mt-3">
           <Text className="text-lg font-outfit-black text-slate-900 dark:text-white">
-            ${product.price}
+            ৳{product.price}
           </Text>
 
           <TouchableOpacity

@@ -80,7 +80,7 @@ const CartScreen: React.FC = () => {
           {item.name}
         </Text>
         <Text className="text-indigo-600 dark:text-indigo-400 font-outfit-bold">
-          ${item.price.toFixed(2)}
+          ৳{item.price.toFixed(2)}
         </Text>
         <View className="flex-row items-center mt-2">
           <TouchableOpacity
@@ -108,9 +108,7 @@ const CartScreen: React.FC = () => {
       </TouchableOpacity>
     </View>
   );
-
-
-
+  
   return (
     <SafeAreaView className="flex-1 bg-slate-50 dark:bg-slate-900 p-4">
       <View className="flex-1">
@@ -158,7 +156,7 @@ const CartScreen: React.FC = () => {
                   Total:
                 </Text>
                 <Text className="text-xl font-outfit-black text-indigo-600 dark:text-indigo-400">
-                  ${calculateTotal().toFixed(2)}
+                  ৳{calculateTotal().toFixed(2)}
                 </Text>
               </View>
               <TouchableOpacity

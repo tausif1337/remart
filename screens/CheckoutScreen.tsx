@@ -440,11 +440,11 @@ const CheckoutScreen: React.FC = () => {
                     {item.name}
                   </Text>
                   <Text className="text-slate-500 dark:text-slate-400 text-xs">
-                    Qty: {item.quantity} × ${item.price.toFixed(2)}
+                    Qty: {item.quantity} × ৳{item.price.toFixed(2)}
                   </Text>
                 </View>
                 <Text className="text-slate-900 dark:text-white font-outfit-bold">
-                  ${(item.price * item.quantity).toFixed(2)}
+                  ৳{(item.price * item.quantity).toFixed(2)}
                 </Text>
               </View>
             ))
@@ -458,7 +458,7 @@ const CheckoutScreen: React.FC = () => {
               Total:
             </Text>
             <Text className="text-xl font-outfit-black text-indigo-600 dark:text-indigo-400">
-              ${totalAmount.toFixed(2)}
+              ৳{totalAmount.toFixed(2)}
             </Text>
           </View>
           <TouchableOpacity
@@ -730,7 +730,7 @@ const CheckoutScreen: React.FC = () => {
             <View className="flex-row items-center">
               <Text className="text-white font-outfit-bold text-lg">
                 {cart.length > 0
-                  ? `Place Order - $${totalAmount.toFixed(2)}`
+                  ? `Place Order - ৳${totalAmount.toFixed(2)}`
                   : "Cart is Empty"}
               </Text>
             </View>

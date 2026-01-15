@@ -122,7 +122,7 @@ export default function ProductDetailScreen() {
             </View>
             <View className="bg-slate-100 dark:bg-slate-900 px-3 py-2 rounded-2xl">
               <Text className="text-2xl font-outfit-black text-indigo-600 dark:text-indigo-400">
-                ${product.price}
+                ৳{product.price}
               </Text>
             </View>
           </View>
@@ -223,7 +223,7 @@ export default function ProductDetailScreen() {
               Total Price
             </Text>
             <Text className="text-2xl font-outfit-black text-slate-900 dark:text-white">
-              ${(product.price * quantity).toFixed(2)}
+              ৳{(product.price * quantity).toFixed(2)}
             </Text>
           </View>
           <TouchableOpacity

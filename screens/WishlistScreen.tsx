@@ -68,7 +68,7 @@ const WishlistScreen: React.FC = () => {
             {item.name}
           </Text>
           <Text className="text-indigo-600 dark:text-indigo-400 font-outfit-bold">
-            ${item.price.toFixed(2)}
+            ৳{item.price.toFixed(2)}
           </Text>
           <Text className="text-xs text-slate-500 mt-1">{item.category}</Text>
         </TouchableOpacity>

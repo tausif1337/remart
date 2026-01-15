@@ -107,7 +107,7 @@ const OrderConfirmationScreen: React.FC = () => {
                 Total Amount:
               </Text>
               <Text className="text-xl font-outfit-black text-indigo-600 dark:text-indigo-400">
-                ${orderDetails.amount.toFixed(2)}
+                ৳{orderDetails.amount.toFixed(2)}
               </Text>
             </View>
           </View>
@@ -129,11 +129,11 @@ const OrderConfirmationScreen: React.FC = () => {
                   {item.name}
                 </Text>
                 <Text className="text-slate-500 dark:text-slate-400 text-xs">
-                  Qty: {item.quantity} × ${item.price.toFixed(2)}
+                  Qty: {item.quantity} × ৳{item.price.toFixed(2)}
                 </Text>
               </View>
               <Text className="text-slate-900 dark:text-white font-outfit-bold">
-                ${(item.price * item.quantity).toFixed(2)}
+                ৳{(item.price * item.quantity).toFixed(2)}
               </Text>
             </View>
           ))}
