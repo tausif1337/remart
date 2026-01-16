@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   Animated,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -19,6 +20,7 @@ import { addToCart } from "../store/cartSlice";
 import { Product, Review } from "../store/types";
 import CartIconWithBadge from "../components/CartIconWithBadge";
 import ReviewSection from "../components/ReviewSection";
+import { getProductById, getReviewsByProductId } from "../utils/firebaseServices";
 
 type ProductDetailRouteProp = RouteProp<RootStackParamList, "ProductDetail">;
 type NavigationProp = NativeStackNavigationProp<
@@ -33,23 +35,48 @@ export default function ProductDetailScreen() {
   const { width } = useWindowDimensions();
   const dispatch = useDispatch();
 
-  // Get all products from the Redux store
-  const products = useSelector((state: any) => state.cart.products);
+  // Get reviews from the Redux store
   const reviews = useSelector((state: any) => state.cart.reviews);
 
-  // Find the specific product based on the route parameter
-  const product = products.find((p: Product) => p.id === productId);
-
-  // Filter reviews for this specific product
-  const productReviews = React.useMemo(() => {
-    if (!reviews) return [];
-    return reviews.filter((review: Review) => review.productId === productId);
-  }, [reviews, productId]);
-
+  const [product, setProduct] = useState<Product | null>(null);
+  const [productReviews, setProductReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
+  
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<"Description" | "Specs">(
     "Description"
   );
+  
+  // Fetch product details and reviews from Firebase
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [fetchedProduct, fetchedReviews] = await Promise.all([
+          getProductById(productId),
+          getReviewsByProductId(productId)
+        ]);
+        setProduct(fetchedProduct as Product);
+        setProductReviews(fetchedReviews as Review[]);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [productId]);
+
+  if (loading) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-white dark:bg-slate-950">
+        <ActivityIndicator size="large" color="#4F46E5" />
+        <Text className="text-slate-500 dark:text-slate-400 text-sm font-outfit-medium mt-4">
+          Loading product details...
+        </Text>
+      </SafeAreaView>
+    );
+  }
 
   if (!product) {
     return (
@@ -78,7 +105,7 @@ export default function ProductDetailScreen() {
   };
 
   const navigateToCart = () => {
-    navigation.navigate("Cart");
+    navigation.navigate("MainTab", { screen: "Cart" });
   };
 
   return (

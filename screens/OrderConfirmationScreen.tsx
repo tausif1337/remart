@@ -200,7 +200,7 @@ const OrderConfirmationScreen: React.FC = () => {
         <View className="space-y-4">
           <TouchableOpacity
             className="h-14 bg-indigo-600 rounded-xl items-center justify-center"
-            onPress={() => navigation.navigate("ProductListing")}
+            onPress={() => navigation.navigate("MainTab", { screen: "Home" })}
           >
             <Text className="text-white font-outfit-bold text-lg">
               Continue Shopping
@@ -209,7 +209,7 @@ const OrderConfirmationScreen: React.FC = () => {
 
           <TouchableOpacity
             className="h-14 border-2 border-indigo-600 rounded-xl items-center justify-center"
-            onPress={() => navigation.navigate("Cart")}
+            onPress={() => navigation.navigate("MainTab", { screen: "Cart" })}
           >
             <Text className="text-indigo-600 dark:text-indigo-400 font-outfit-bold text-lg">
               View Cart

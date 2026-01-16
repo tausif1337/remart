@@ -1,9 +1,51 @@
-import React from 'react';
-import { Provider } from 'react-redux';
-import { store } from './store';
+import React, { useEffect } from 'react';
+import { Provider, useDispatch, useSelector } from 'react-redux';
+import { store, RootState } from './store';
+import app from './utils/firebaseConfig';
+import { auth } from './utils/firebaseServices';
+import { onAuthStateChanged } from 'firebase/auth';
+import { setUser, setLoading } from './store/authSlice';
+import { View, ActivityIndicator } from 'react-native';
+
+const AuthObserver: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const dispatch = useDispatch();
+  const isLoading = useSelector((state: RootState) => state.auth.isLoading);
+
+  useEffect(() => {
+    dispatch(setLoading(true));
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        dispatch(setUser({
+          id: user.uid,
+          email: user.email || '',
+          displayName: user.displayName || '',
+        }));
+      } else {
+        dispatch(setUser(null));
+      }
+      dispatch(setLoading(false));
+    });
+
+    return () => unsubscribe();
+  }, [dispatch]);
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8FAFC' }}>
+        <ActivityIndicator size="large" color="#4F46E5" />
+      </View>
+    );
+  }
+
+  return <>{children}</>;
+};
 
 const AppWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <Provider store={store}>{children}</Provider>;
+  return (
+    <Provider store={store}>
+      <AuthObserver>{children}</AuthObserver>
+    </Provider>
+  );
 };
 
 export default AppWrapper;

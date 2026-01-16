@@ -18,6 +18,7 @@ import { clearCart } from "../store/cartSlice";
 import { RootStackParamList } from "../navigation/types";
 import { WebView, WebViewNavigation } from "react-native-webview";
 import { apiService } from "../utils/apiService";
+import { saveOrder } from "../utils/firebaseServices";
 
 const SUCCESS_URL = "https://remart-app.com/payment-success";
 const FAIL_URL = "https://remart-app.com/payment-fail";
@@ -67,6 +68,7 @@ const CheckoutScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const dispatch = useDispatch();
   const cart = useSelector((state: any) => state.cart.cart);
+  const user = useSelector((state: any) => state.auth.user);
 
   const [formData, setFormData] = useState<FormData>({
     firstName: "Md. Tausif",
@@ -348,10 +350,13 @@ const CheckoutScreen: React.FC = () => {
           amount: totalAmount,
           customerName: `${formData.firstName} ${formData.lastName}`,
           email: formData.email,
+          userId: user?.id || "guest",
           items: cart.map((item: CartItem) => ({
+            id: item.id,
             name: item.name,
             quantity: item.quantity,
             price: item.price,
+            image: item.image,
           })),
           shippingAddress: {
             address: formData.address,
@@ -362,6 +367,15 @@ const CheckoutScreen: React.FC = () => {
           },
           orderDate: new Date().toISOString(),
         };
+
+        // Save order to Firebase
+        saveOrder(orderDetails).then(res => {
+          if (res.success) {
+            console.log("Order saved to Firebase with ID:", res.id);
+          } else {
+            console.error("Failed to save order to Firebase:", res.error);
+          }
+        });
 
         navigation.navigate("OrderConfirmation", { orderDetails });
       } else if (url.startsWith(CANCEL_URL)) {
@@ -462,7 +476,7 @@ const CheckoutScreen: React.FC = () => {
           </View>
           <TouchableOpacity
             className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700"
-            onPress={() => navigation.navigate("Cart")}
+            onPress={() => navigation.navigate("MainTab", { screen: "Cart" })}
           >
             <Text className="text-indigo-600 dark:text-indigo-400 text-center font-outfit-medium">
               Edit Cart

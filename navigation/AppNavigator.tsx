@@ -1,12 +1,15 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { NavigationContainer } from "@react-navigation/native";
-import ProductListingScreen from "../screens/ProductListingScreen";
 import ProductDetailScreen from "../screens/ProductDetailScreen";
-import CartScreen from "../screens/CartScreen";
 import WishlistScreen from "../screens/WishlistScreen";
 import CheckoutScreen from "../screens/CheckoutScreen";
 import OrderConfirmationScreen from "../screens/OrderConfirmationScreen";
+import OrderHistoryScreen from "../screens/OrderHistoryScreen";
+import OrderDetailScreen from "../screens/OrderDetailScreen";
+import LoginScreen from "../screens/LoginScreen";
+import RegisterScreen from "../screens/RegisterScreen";
+import MainTabNavigator from "./MainTabNavigator";
 import { RootStackParamList } from "./types";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -14,20 +17,15 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function AppNavigator() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="ProductListing" screenOptions={{}}>
+      <Stack.Navigator initialRouteName="MainTab" screenOptions={{}}>
         <Stack.Screen
-          name="ProductListing"
-          component={ProductListingScreen}
+          name="MainTab"
+          component={MainTabNavigator}
           options={{ headerShown: false }}
         />
         <Stack.Screen
           name="ProductDetail"
           component={ProductDetailScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Cart"
-          component={CartScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen
@@ -43,6 +41,26 @@ export default function AppNavigator() {
         <Stack.Screen
           name="OrderConfirmation"
           component={OrderConfirmationScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="OrderHistory"
+          component={OrderHistoryScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="OrderDetail"
+          component={OrderDetailScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Register"
+          component={RegisterScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
