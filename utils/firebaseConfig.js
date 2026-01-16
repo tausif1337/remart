@@ -1,15 +1,24 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from 'firebase/app';
+import {
+  FIREBASE_API_KEY,
+  FIREBASE_AUTH_DOMAIN,
+  FIREBASE_PROJECT_ID,
+  FIREBASE_STORAGE_BUCKET,
+  FIREBASE_MESSAGING_SENDER_ID,
+  FIREBASE_APP_ID,
+  FIREBASE_MEASUREMENT_ID,
+} from '@env';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCt6_5iPVNLIt7bri9xZSYQTFOn5f7Y97k",
-  authDomain: "remart-531b2.firebaseapp.com",
-  projectId: "remart-531b2",
-  storageBucket: "remart-531b2.firebasestorage.app",
-  messagingSenderId: "637114173060",
-  appId: "1:637114173060:web:d3723d585e073c651a64d1",
-  measurementId: "G-2S0HCCTQGK"
+  apiKey: FIREBASE_API_KEY,
+  authDomain: FIREBASE_AUTH_DOMAIN,
+  projectId: FIREBASE_PROJECT_ID,
+  storageBucket: FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: FIREBASE_MESSAGING_SENDER_ID,
+  appId: FIREBASE_APP_ID,
+  measurementId: FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
