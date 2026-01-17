@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Image,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import {
@@ -18,6 +20,7 @@ import { useDispatch } from "react-redux";
 import { addToCart } from "../store/cartSlice";
 import { RootStackParamList } from "../navigation/types";
 import Toast from "react-native-toast-message";
+import { cancelOrder } from "../utils/firebaseServices";
 
 type OrderDetailRouteProp = RouteProp<RootStackParamList, "OrderDetail">;
 
@@ -26,6 +29,9 @@ const OrderDetailScreen: React.FC = () => {
   const route = useRoute<OrderDetailRouteProp>();
   const dispatch = useDispatch();
   const { order } = route.params;
+  
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [orderStatus, setOrderStatus] = useState(order.status);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -38,6 +44,7 @@ const OrderDetailScreen: React.FC = () => {
   };
 
   const handleReorder = () => {
+    console.log("[DEBUG] Reordering items from order:", order.orderId || order.id);
     order.items.forEach((item: any) => {
       // Re-constructing the product object as needed by addToCart
       const product = {
@@ -60,6 +67,62 @@ const OrderDetailScreen: React.FC = () => {
     setTimeout(() => {
       navigation.navigate("MainTab", { screen: "Cart" });
     }, 1500);
+  };
+
+  const handleCancelOrder = () => {
+    console.log("[DEBUG] Cancel order requested:", order.orderId || order.id);
+    
+    Alert.alert(
+      "Cancel Order",
+      "Are you sure you want to cancel this order? This action cannot be undone.",
+      [
+        {
+          text: "No, Keep Order",
+          style: "cancel",
+        },
+        {
+          text: "Yes, Cancel Order",
+          style: "destructive",
+          onPress: async () => {
+            setIsCancelling(true);
+            console.log("[DEBUG] Proceeding with order cancellation...");
+            
+            try {
+              const result = await cancelOrder(order.id);
+              
+              if (result.success) {
+                setOrderStatus("Cancelled");
+                Toast.show({
+                  type: "success",
+                  text1: "Order Cancelled",
+                  text2: "Your order has been cancelled successfully",
+                  visibilityTime: 3000,
+                });
+                console.log("[DEBUG] Order cancelled successfully");
+              } else {
+                Toast.show({
+                  type: "error",
+                  text1: "Cancellation Failed",
+                  text2: result.error || "Could not cancel order. Please try again.",
+                  visibilityTime: 3000,
+                });
+                console.error("[ERROR] Order cancellation failed:", result.error);
+              }
+            } catch (error) {
+              console.error("[ERROR] Unexpected error during cancellation:", error);
+              Toast.show({
+                type: "error",
+                text1: "Error",
+                text2: "An unexpected error occurred. Please try again.",
+                visibilityTime: 3000,
+              });
+            } finally {
+              setIsCancelling(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -101,7 +164,7 @@ const OrderDetailScreen: React.FC = () => {
             </View>
             <View className="bg-white/20 px-3 py-1 rounded-full">
               <Text className="text-white text-xs font-outfit-bold">
-                {order.status}
+                {orderStatus}
               </Text>
             </View>
           </View>
@@ -216,13 +279,53 @@ const OrderDetailScreen: React.FC = () => {
         {/* Reorder Button */}
         <TouchableOpacity
           onPress={handleReorder}
-          className="bg-indigo-600 h-14 rounded-2xl flex-row items-center justify-center mb-8 shadow-lg shadow-indigo-200"
+          disabled={isCancelling}
+          className="bg-indigo-600 h-14 rounded-2xl flex-row items-center justify-center mb-4 shadow-lg shadow-indigo-200"
         >
           <Feather name="refresh-cw" size={20} color="white" />
           <Text className="text-white text-lg font-outfit-bold ml-2">
             Reorder Items
           </Text>
         </TouchableOpacity>
+
+        {/* Cancel Order Button - Only show if order is not already cancelled or delivered */}
+        {orderStatus !== "Cancelled" && orderStatus !== "Delivered" && (
+          <TouchableOpacity
+            onPress={handleCancelOrder}
+            disabled={isCancelling}
+            className={`h-14 rounded-2xl flex-row items-center justify-center shadow-lg ${
+              isCancelling ? "bg-slate-400" : "bg-red-500 shadow-red-200"
+            }`}
+          >
+            {isCancelling ? (
+              <>
+                <ActivityIndicator size="small" color="white" />
+                <Text className="text-white text-lg font-outfit-bold ml-2">
+                  Cancelling...
+                </Text>
+              </>
+            ) : (
+              <>
+                <Feather name="x-circle" size={20} color="white" />
+                <Text className="text-white text-lg font-outfit-bold ml-2">
+                  Cancel Order
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
+
+        {/* Cancelled Badge */}
+        {orderStatus === "Cancelled" && (
+          <View className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-4">
+            <View className="flex-row items-center">
+              <Feather name="x-circle" size={20} color="#EF4444" />
+              <Text className="flex-1 text-red-700 dark:text-red-300 text-sm font-outfit-bold ml-3">
+                This order has been cancelled
+              </Text>
+            </View>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

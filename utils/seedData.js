@@ -7,6 +7,8 @@ export const MOCK_PRODUCTS = [
     image:
       "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1000&auto=format&fit=crop",
     rating: 4.8,
+    stock: 45,
+    lowStockThreshold: 10,
     description:
       "Experience immersive sound with our latest noise-canceling technology. These headphones offer premium comfort and crystal-clear audio quality for music lovers and professionals alike.",
     specifications: [
@@ -24,6 +26,8 @@ export const MOCK_PRODUCTS = [
     image:
       "https://images.unsplash.com/photo-1592078615290-033ee584e267?q=80&w=1000&auto=format&fit=crop",
     rating: 4.5,
+    stock: 12,
+    lowStockThreshold: 5,
     description:
       "Designed for ultimate comfort during long work hours. This ergonomic chair features adjustable height, lumbar support, and breathable mesh material.",
     specifications: [
@@ -40,6 +44,8 @@ export const MOCK_PRODUCTS = [
     image:
       "https://images.unsplash.com/photo-1546868871-7041f2a55e12?q=80&w=1000&auto=format&fit=crop",
     rating: 4.9,
+    stock: 3,
+    lowStockThreshold: 5,
     description:
       "Track your health and stay connected with this stylish smart watch. Includes heart rate monitoring, GPS, and multi-sport tracking.",
     specifications: [
@@ -56,6 +62,8 @@ export const MOCK_PRODUCTS = [
     image:
       "https://images.unsplash.com/photo-1507473888900-52e1ad14db3d?q=80&w=1000&auto=format&fit=crop",
     rating: 4.2,
+    stock: 0,
+    lowStockThreshold: 5,
     description:
       "Enhance your workspace with this sleek, minimalist desk lamp. Features touch control and adjustable brightness levels.",
     specifications: [
@@ -71,6 +79,8 @@ export const MOCK_PRODUCTS = [
     image:
       "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?q=80&w=1000&auto=format&fit=crop",
     rating: 4.6,
+    stock: 28,
+    lowStockThreshold: 10,
     description:
       "Sleek wireless keyboard with mechanical switches for a premium typing experience. Features long battery life and customizable RGB lighting.",
     specifications: [
@@ -88,6 +98,8 @@ export const MOCK_PRODUCTS = [
     image:
       "https://images.unsplash.com/photo-1598436908734-73bae32a3b34?q=80&w=1000&auto=format&fit=crop",
     rating: 4.7,
+    stock: 35,
+    lowStockThreshold: 10,
     description:
       "High-precision gaming mouse with programmable buttons and adjustable DPI settings. Ergonomic design for extended use.",
     specifications: [
@@ -105,6 +117,8 @@ export const MOCK_PRODUCTS = [
     image:
       "https://images.unsplash.com/photo-1550966872-44e3d2b0e465?q=80&w=1000&auto=format&fit=crop",
     rating: 4.4,
+    stock: 8,
+    lowStockThreshold: 5,
     description:
       "Modern coffee table with a minimalist design. Features a tempered glass top and solid wood legs for durability.",
     specifications: [
@@ -121,6 +135,8 @@ export const MOCK_PRODUCTS = [
     image:
       "https://images.unsplash.com/photo-1576671418898-8a6c3d68e641?q=80&w=1000&auto=format&fit=crop",
     rating: 4.3,
+    stock: 50,
+    lowStockThreshold: 15,
     description:
       "Non-slip yoga mat with extra cushioning for comfort during workouts. Eco-friendly material with carrying strap included.",
     specifications: [
@@ -138,6 +154,8 @@ export const MOCK_PRODUCTS = [
     image:
       "https://images.unsplash.com/photo-1613047508032-34a0d5935d9a?q=80&w=1000&auto=format&fit=crop",
     rating: 4.5,
+    stock: 22,
+    lowStockThreshold: 10,
     description:
       "Portable Bluetooth speaker with 360-degree sound and deep bass. Waterproof design for outdoor use.",
     specifications: [
@@ -155,6 +173,8 @@ export const MOCK_PRODUCTS = [
     image:
       "https://images.unsplash.com/photo-1596466596120-2a8e4b5d2c3a?q=80&w=1000&auto=format&fit=crop",
     rating: 4.1,
+    stock: 40,
+    lowStockThreshold: 15,
     description:
       "Elegant desk organizer with multiple compartments to keep your workspace tidy and efficient.",
     specifications: [
@@ -171,6 +191,8 @@ export const MOCK_PRODUCTS = [
     image:
       "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1000&auto=format&fit=crop",
     rating: 4.7,
+    stock: 60,
+    lowStockThreshold: 20,
     description:
       "Lightweight running shoes with responsive cushioning and breathable mesh upper. Perfect for daily runs and gym sessions.",
     specifications: [
@@ -187,6 +209,8 @@ export const MOCK_PRODUCTS = [
     image:
       "https://images.unsplash.com/photo-1602143407151-7111542de6e8?q=80&w=1000&auto=format&fit=crop",
     rating: 4.2,
+    stock: 75,
+    lowStockThreshold: 25,
     description:
       "Insulated stainless steel water bottle that keeps drinks cold for 24 hours or hot for 12 hours.",
     specifications: [
@@ -203,6 +227,8 @@ export const MOCK_PRODUCTS = [
     image:
       "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=1000&auto=format&fit=crop",
     rating: 4.4,
+    stock: 18,
+    lowStockThreshold: 10,
     description:
       "Durable backpack with laptop compartment and multiple pockets. Water-resistant material for all weather conditions.",
     specifications: [
@@ -220,6 +246,8 @@ export const MOCK_PRODUCTS = [
     image:
       "https://images.unsplash.com/photo-1577803645773-f96470509666?q=80&w=1000&auto=format&fit=crop",
     rating: 4.3,
+    stock: 25,
+    lowStockThreshold: 10,
     description:
       "Stylish sunglasses with UV protection and polarized lenses. Lightweight frame for all-day comfort.",
     specifications: [
@@ -236,6 +264,8 @@ export const MOCK_PRODUCTS = [
     image:
       "https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=1000&auto=format&fit=crop",
     rating: 4.8,
+    stock: 15,
+    lowStockThreshold: 5,
     description:
       "Latest smartphone with high-resolution camera, long battery life, and fast processing power.",
     specifications: [
@@ -253,6 +283,8 @@ export const MOCK_PRODUCTS = [
     image:
       "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=1000&auto=format&fit=crop",
     rating: 4.9,
+    stock: 10,
+    lowStockThreshold: 3,
     description:
       "Powerful laptop with high-performance processor, perfect for work and entertainment. Lightweight and portable.",
     specifications: [
@@ -270,6 +302,8 @@ export const MOCK_PRODUCTS = [
     image:
       "https://images.unsplash.com/photo-1556228453-efd17c9d9b39?q=80&w=1000&auto=format&fit=crop",
     rating: 4.6,
+    stock: 7,
+    lowStockThreshold: 3,
     description:
       "Solid wood dining table that seats 6 people. Rustic design with durable finish.",
     specifications: [
@@ -286,6 +320,8 @@ export const MOCK_PRODUCTS = [
     image:
       "https://images.unsplash.com/photo-1574842268427-9a3f03d0d401?q=80&w=1000&auto=format&fit=crop",
     rating: 4.2,
+    stock: 30,
+    lowStockThreshold: 10,
     description:
       "Track your steps, heart rate, and sleep patterns with this affordable fitness tracker.",
     specifications: [
@@ -303,6 +339,8 @@ export const MOCK_PRODUCTS = [
     image:
       "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?q=80&w=1000&auto=format&fit=crop",
     rating: 4.5,
+    stock: 42,
+    lowStockThreshold: 15,
     description:
       "Comfortable everyday sneakers with cushioned sole and breathable material. Available in multiple colors.",
     specifications: [
@@ -319,6 +357,8 @@ export const MOCK_PRODUCTS = [
     image:
       "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?q=80&w=1000&auto=format&fit=crop",
     rating: 4.7,
+    stock: 20,
+    lowStockThreshold: 8,
     description:
       "Warm winter jacket with waterproof outer layer and insulated interior. Perfect for cold weather.",
     specifications: [

@@ -17,6 +17,7 @@ import { RootStackParamList, MainTabParamList } from "../navigation/types";
 import { useSelector } from "react-redux";
 import { Product, CartItem } from "../store/types";
 import CartIconWithBadge from "../components/CartIconWithBadge";
+import WishlistIconWithBadge from "../components/WishlistIconWithBadge";
 import ProductCard from "../components/ProductCard";
 import SearchBar from "../components/SearchBar";
 import CategoryFilter from "../components/CategoryFilter";
@@ -99,6 +100,11 @@ export default function ProductListingScreen() {
     navigation.navigate("Cart");
   };
 
+  const navigateToWishlist = () => {
+    console.log("[DEBUG] Navigating to Wishlist");
+    navigation.navigate("Wishlist");
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-slate-50 dark:bg-slate-950">
       <View
@@ -116,7 +122,10 @@ export default function ProductListingScreen() {
             </Text>
           </View>
 
-          <CartIconWithBadge onPress={navigateToCart} />
+          <View className="flex-row items-center gap-3">
+            <WishlistIconWithBadge onPress={navigateToWishlist} />
+            <CartIconWithBadge onPress={navigateToCart} />
+          </View>
         </View>
 
         {/* Search & Filter */}

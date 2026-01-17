@@ -13,6 +13,7 @@ export type RootStackParamList = {
   Checkout: undefined;
   Login: undefined;
   Register: undefined;
+  ForgotPassword: undefined;
   OrderHistory: undefined;
   OrderDetail: { order: any };
   OrderConfirmation: {

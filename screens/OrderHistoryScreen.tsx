@@ -63,6 +63,8 @@ const OrderHistoryScreen: React.FC = () => {
           className={`px-2 py-1 rounded-full ${
             item.status === "Delivered"
               ? "bg-green-100 dark:bg-green-900/30"
+              : item.status === "Cancelled"
+              ? "bg-red-100 dark:bg-red-900/30"
               : "bg-blue-100 dark:bg-blue-900/30"
           }`}
         >
@@ -70,6 +72,8 @@ const OrderHistoryScreen: React.FC = () => {
             className={`text-xs font-outfit-bold ${
               item.status === "Delivered"
                 ? "text-green-700 dark:text-green-300"
+                : item.status === "Cancelled"
+                ? "text-red-700 dark:text-red-300"
                 : "text-blue-700 dark:text-blue-300"
             }`}
           >

@@ -147,6 +147,29 @@ const getReviewsByProductId = async (productId) => {
   }
 };
 
+const cancelOrder = async (orderId) => {
+  try {
+    console.log("[DEBUG] Cancelling order:", orderId);
+    const orderDoc = doc(db, "orders", orderId);
+    
+    // Update order status to Cancelled
+    await setDoc(
+      orderDoc,
+      {
+        status: "Cancelled",
+        cancelledAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+    
+    console.log("[DEBUG] Order cancelled successfully:", orderId);
+    return { success: true };
+  } catch (error) {
+    console.error("[ERROR] Error cancelling order:", error);
+    return { success: false, error: error.message };
+  }
+};
+
 export {
   db,
   storage,
@@ -157,4 +180,5 @@ export {
   getUserOrders,
   seedDatabase,
   getReviewsByProductId,
+  cancelOrder,
 };

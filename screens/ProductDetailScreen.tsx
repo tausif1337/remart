@@ -98,6 +98,29 @@ export default function ProductDetailScreen() {
   }
 
   const handleAddToCart = () => {
+    console.log("[DEBUG] Adding to cart - Product:", product.name, "Quantity:", quantity, "Stock:", product.stock);
+    
+    // Check if product has stock defined and if there's enough stock
+    if (product.stock !== undefined && product.stock <= 0) {
+      Toast.show({
+        type: "error",
+        text1: "Out of Stock",
+        text2: `${product.name} is currently unavailable`,
+        visibilityTime: 2000,
+      });
+      return;
+    }
+
+    if (product.stock !== undefined && quantity > product.stock) {
+      Toast.show({
+        type: "error",
+        text1: "Insufficient Stock",
+        text2: `Only ${product.stock} items available`,
+        visibilityTime: 2000,
+      });
+      return;
+    }
+
     dispatch(addToCart({ product, quantity }));
     Toast.show({
       type: "success",
@@ -169,6 +192,34 @@ export default function ProductDetailScreen() {
             </Text>
           </View>
 
+          {/* Stock Status Badge */}
+          {product.stock !== undefined && (
+            <View className="mt-4">
+              {product.stock === 0 ? (
+                <View className="flex-row items-center bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-lg self-start">
+                  <Feather name="x-circle" size={16} color="#EF4444" />
+                  <Text className="text-red-600 dark:text-red-400 font-outfit-bold ml-2 text-sm">
+                    Out of Stock
+                  </Text>
+                </View>
+              ) : product.stock <= (product.lowStockThreshold || 5) ? (
+                <View className="flex-row items-center bg-orange-50 dark:bg-orange-900/20 px-3 py-2 rounded-lg self-start">
+                  <Feather name="alert-circle" size={16} color="#F97316" />
+                  <Text className="text-orange-600 dark:text-orange-400 font-outfit-bold ml-2 text-sm">
+                    Only {product.stock} left in stock!
+                  </Text>
+                </View>
+              ) : (
+                <View className="flex-row items-center bg-green-50 dark:bg-green-900/20 px-3 py-2 rounded-lg self-start">
+                  <Feather name="check-circle" size={16} color="#10B981" />
+                  <Text className="text-green-600 dark:text-green-400 font-outfit-bold ml-2 text-sm">
+                    In Stock ({product.stock} available)
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+
           {/* Quantity Selector */}
           <View className="mt-8">
             <Text className="text-sm font-outfit-bold text-slate-900 dark:text-white mb-3">
@@ -177,18 +228,36 @@ export default function ProductDetailScreen() {
             <View className="flex-row items-center bg-slate-100 dark:bg-slate-900 w-32 justify-between p-1 rounded-xl">
               <TouchableOpacity
                 onPress={() => setQuantity(Math.max(1, quantity - 1))}
-                className="w-10 h-10 bg-white dark:bg-slate-800 rounded-lg items-center justify-center"
+                disabled={product.stock === 0}
+                className={`w-10 h-10 rounded-lg items-center justify-center ${
+                  product.stock === 0 ? "bg-slate-200 dark:bg-slate-800" : "bg-white dark:bg-slate-800"
+                }`}
               >
-                <Feather name="minus" size={18} color="#1E293B" />
+                <Feather name="minus" size={18} color={product.stock === 0 ? "#94A3B8" : "#1E293B"} />
               </TouchableOpacity>
               <Text className="text-lg font-outfit-bold text-slate-900 dark:text-white">
                 {quantity}
               </Text>
               <TouchableOpacity
-                onPress={() => setQuantity(quantity + 1)}
-                className="w-10 h-10 bg-white dark:bg-slate-800 rounded-lg items-center justify-center"
+                onPress={() => {
+                  const maxQuantity = product.stock || 999;
+                  if (quantity < maxQuantity) {
+                    setQuantity(quantity + 1);
+                  } else {
+                    Toast.show({
+                      type: "error",
+                      text1: "Maximum Quantity Reached",
+                      text2: `Only ${maxQuantity} items available`,
+                      visibilityTime: 2000,
+                    });
+                  }
+                }}
+                disabled={product.stock === 0}
+                className={`w-10 h-10 rounded-lg items-center justify-center ${
+                  product.stock === 0 ? "bg-slate-200 dark:bg-slate-800" : "bg-white dark:bg-slate-800"
+                }`}
               >
-                <Feather name="plus" size={18} color="#1E293B" />
+                <Feather name="plus" size={18} color={product.stock === 0 ? "#94A3B8" : "#1E293B"} />
               </TouchableOpacity>
             </View>
           </View>
@@ -258,11 +327,14 @@ export default function ProductDetailScreen() {
           </View>
           <TouchableOpacity
             onPress={handleAddToCart}
-            className="bg-indigo-600 h-14 flex-1 rounded-2xl flex-row items-center justify-center"
+            disabled={product.stock === 0}
+            className={`h-14 flex-1 rounded-2xl flex-row items-center justify-center ${
+              product.stock === 0 ? "bg-slate-400" : "bg-indigo-600"
+            }`}
           >
             <Feather name="shopping-cart" size={20} color="#FFFFFF" />
             <Text className="text-white font-outfit-bold ml-2 text-lg">
-              Add to Cart
+              {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
             </Text>
           </TouchableOpacity>
         </View>

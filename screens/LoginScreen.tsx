@@ -141,6 +141,15 @@ const LoginScreen = () => {
         </View>
 
         <TouchableOpacity
+          onPress={() => navigation.navigate("ForgotPassword")}
+          className="mb-6"
+        >
+          <Text className="text-indigo-600 dark:text-indigo-400 font-outfit-bold text-right">
+            Forgot Password?
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
           onPress={handleLogin}
           disabled={loading}
           className={`h-16 rounded-2xl items-center justify-center shadow-lg ${

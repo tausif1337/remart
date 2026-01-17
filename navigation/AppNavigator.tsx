@@ -9,6 +9,7 @@ import OrderHistoryScreen from "../screens/OrderHistoryScreen";
 import OrderDetailScreen from "../screens/OrderDetailScreen";
 import LoginScreen from "../screens/LoginScreen";
 import RegisterScreen from "../screens/RegisterScreen";
+import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
 import MainTabNavigator from "./MainTabNavigator";
 import { RootStackParamList } from "./types";
 
@@ -61,6 +62,11 @@ export default function AppNavigator() {
         <Stack.Screen
           name="Register"
           component={RegisterScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ForgotPassword"
+          component={ForgotPasswordScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
