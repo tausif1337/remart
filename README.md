@@ -885,7 +885,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 **Remart Development Team**
 
 - GitHub: [@tausif1337](https://github.com/tausif1337)
-- Email: contact@remart.com
+- Email: technicalbind@gmail.com
 
 ---
 
