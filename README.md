@@ -151,7 +151,7 @@ Before you begin, ensure you have the following installed:
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/remart.git
+git clone https://github.com/tausif1337/remart.git
 cd remart
 ```
 
@@ -884,7 +884,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 **Remart Development Team**
 
-- GitHub: [@yourusername](https://github.com/yourusername)
+- GitHub: [@tausif1337](https://github.com/tausif1337)
 - Email: contact@remart.com
 
 ---
