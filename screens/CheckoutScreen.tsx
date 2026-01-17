@@ -369,7 +369,7 @@ const CheckoutScreen: React.FC = () => {
         };
 
         // Save order to Firebase
-        saveOrder(orderDetails).then(res => {
+        saveOrder(orderDetails).then((res) => {
           if (res.success) {
             console.log("Order saved to Firebase with ID:", res.id);
           } else {

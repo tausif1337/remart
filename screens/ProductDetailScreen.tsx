@@ -20,7 +20,10 @@ import { addToCart } from "../store/cartSlice";
 import { Product, Review } from "../store/types";
 import CartIconWithBadge from "../components/CartIconWithBadge";
 import ReviewSection from "../components/ReviewSection";
-import { getProductById, getReviewsByProductId } from "../utils/firebaseServices";
+import {
+  getProductById,
+  getReviewsByProductId,
+} from "../utils/firebaseServices";
 
 type ProductDetailRouteProp = RouteProp<RootStackParamList, "ProductDetail">;
 type NavigationProp = NativeStackNavigationProp<
@@ -41,29 +44,29 @@ export default function ProductDetailScreen() {
   const [product, setProduct] = useState<Product | null>(null);
   const [productReviews, setProductReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<"Description" | "Specs">(
     "Description"
   );
-  
+
   // Fetch product details and reviews from Firebase
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [fetchedProduct, fetchedReviews] = await Promise.all([
           getProductById(productId),
-          getReviewsByProductId(productId)
+          getReviewsByProductId(productId),
         ]);
         setProduct(fetchedProduct as Product);
         setProductReviews(fetchedReviews as Review[]);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchData();
   }, [productId]);
 

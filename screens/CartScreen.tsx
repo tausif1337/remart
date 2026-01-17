@@ -15,7 +15,7 @@ const CartScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const dispatch = useDispatch();
   const cart = useSelector((state: any) => state.cart.cart);
-  
+
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [itemToRemove, setItemToRemove] = useState<string | null>(null);
 
@@ -65,7 +65,8 @@ const CartScreen: React.FC = () => {
 
   const calculateTotal = () => {
     return cart.reduce(
-      (total: number, item: CartItem) => total + item.price * item.quantity, 0
+      (total: number, item: CartItem) => total + item.price * item.quantity,
+      0
     );
   };
 
@@ -108,7 +109,7 @@ const CartScreen: React.FC = () => {
       </TouchableOpacity>
     </View>
   );
-  
+
   return (
     <SafeAreaView className="flex-1 bg-slate-50 dark:bg-slate-900 p-4">
       <View className="flex-1">

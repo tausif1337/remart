@@ -36,25 +36,27 @@ export default function ProductListingScreen() {
 
   // Get cart from Redux store
   const cart = useSelector((state: any) => state.cart.cart);
-  
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const { width } = useWindowDimensions();
-  
+
   // Fetch products from Firebase
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const fetchedProducts = await getProducts();
-        
+
         // If no products found, offer to seed or auto-seed
         if (fetchedProducts.length === 0) {
           console.log("No products found in Firestore. Seeding database...");
           const seedResult = await seedDatabase();
           if (seedResult.success) {
-            console.log("Database seeded successfully. Re-fetching products...");
+            console.log(
+              "Database seeded successfully. Re-fetching products..."
+            );
             const reFetchedProducts = await getProducts();
             setProducts(reFetchedProducts as Product[]);
           } else {
@@ -64,12 +66,12 @@ export default function ProductListingScreen() {
           setProducts(fetchedProducts as Product[]);
         }
       } catch (error) {
-        console.error('Error fetching products:', error);
+        console.error("Error fetching products:", error);
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchProducts();
   }, []);
 
@@ -175,12 +177,12 @@ export default function ProductListingScreen() {
                 const fetchedProducts = await getProducts();
                 setProducts(fetchedProducts as Product[]);
               } catch (error) {
-                console.error('Error fetching products:', error);
+                console.error("Error fetching products:", error);
               } finally {
                 setLoading(false);
               }
             };
-            
+
             fetchProducts();
           }}
         />

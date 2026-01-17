@@ -1,7 +1,8 @@
 import axios from "axios";
 import { SSLCOMMERZ_STORE_ID, SSLCOMMERZ_STORE_PASSWORD } from "@env";
 
-const SSLCOMMERZ_API_URL = "https://sandbox.sslcommerz.com/gwprocess/v4/api.php";
+const SSLCOMMERZ_API_URL =
+  "https://sandbox.sslcommerz.com/gwprocess/v4/api.php";
 
 export interface SSLCommerzRequest {
   total_amount: number;
@@ -32,10 +33,16 @@ export interface SSLCommerzResponse {
 }
 
 export const apiService = {
-  initiatePayment: async (data: SSLCommerzRequest): Promise<SSLCommerzResponse> => {
+  initiatePayment: async (
+    data: SSLCommerzRequest
+  ): Promise<SSLCommerzResponse> => {
     try {
-      const cleanStoreId = (SSLCOMMERZ_STORE_ID || "").replace(/['"]/g, "").trim();
-      const cleanPassword = (SSLCOMMERZ_STORE_PASSWORD || "").replace(/['"]/g, "").trim();
+      const cleanStoreId = (SSLCOMMERZ_STORE_ID || "")
+        .replace(/['"]/g, "")
+        .trim();
+      const cleanPassword = (SSLCOMMERZ_STORE_PASSWORD || "")
+        .replace(/['"]/g, "")
+        .trim();
 
       const params = new URLSearchParams();
       params.append("store_id", cleanStoreId);
@@ -59,7 +66,10 @@ export const apiService = {
       params.append("product_category", data.product_category);
       params.append("product_profile", data.product_profile);
 
-      console.log("SSLCommerz Request:", params.toString().replace(/store_passwd=[^&]*/, "store_passwd=********"));
+      console.log(
+        "SSLCommerz Request:",
+        params.toString().replace(/store_passwd=[^&]*/, "store_passwd=********")
+      );
 
       const response = await axios.post(SSLCOMMERZ_API_URL, params.toString(), {
         headers: {

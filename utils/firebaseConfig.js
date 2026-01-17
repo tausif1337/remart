@@ -1,5 +1,5 @@
 // Import the functions you need from the SDKs you need
-import { initializeApp } from 'firebase/app';
+import { initializeApp } from "firebase/app";
 import {
   FIREBASE_API_KEY,
   FIREBASE_AUTH_DOMAIN,
@@ -8,7 +8,7 @@ import {
   FIREBASE_MESSAGING_SENDER_ID,
   FIREBASE_APP_ID,
   FIREBASE_MEASUREMENT_ID,
-} from '@env';
+} from "@env";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -18,7 +18,7 @@ const firebaseConfig = {
   storageBucket: FIREBASE_STORAGE_BUCKET,
   messagingSenderId: FIREBASE_MESSAGING_SENDER_ID,
   appId: FIREBASE_APP_ID,
-  measurementId: FIREBASE_MEASUREMENT_ID
+  measurementId: FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,12 +7,12 @@ import {
   SafeAreaView,
   ActivityIndicator,
   RefreshControl,
-} from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import { useNavigation, NavigationProp } from '@react-navigation/native';
-import { useSelector } from 'react-redux';
-import { getUserOrders } from '../utils/firebaseServices';
-import { RootStackParamList } from '../navigation/types';
+} from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { useNavigation, NavigationProp } from "@react-navigation/native";
+import { useSelector } from "react-redux";
+import { getUserOrders } from "../utils/firebaseServices";
+import { RootStackParamList } from "../navigation/types";
 
 const OrderHistoryScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
@@ -43,28 +43,36 @@ const OrderHistoryScreen: React.FC = () => {
   }, [user]);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
   const renderOrderItem = ({ item }: { item: any }) => (
     <TouchableOpacity
-      onPress={() => navigation.navigate('OrderDetail', { order: item })}
+      onPress={() => navigation.navigate("OrderDetail", { order: item })}
       className="bg-white dark:bg-slate-800 rounded-xl p-4 mb-4 border border-slate-100 dark:border-slate-700 shadow-sm"
     >
       <View className="flex-row justify-between items-center mb-2">
         <Text className="text-sm font-outfit-bold text-slate-500 dark:text-slate-400">
           Order #{item.orderId || item.id.slice(0, 8).toUpperCase()}
         </Text>
-        <View className={`px-2 py-1 rounded-full ${
-          item.status === 'Delivered' ? 'bg-green-100 dark:bg-green-900/30' : 'bg-blue-100 dark:bg-blue-900/30'
-        }`}>
-          <Text className={`text-xs font-outfit-bold ${
-            item.status === 'Delivered' ? 'text-green-700 dark:text-green-300' : 'text-blue-700 dark:text-blue-300'
-          }`}>
+        <View
+          className={`px-2 py-1 rounded-full ${
+            item.status === "Delivered"
+              ? "bg-green-100 dark:bg-green-900/30"
+              : "bg-blue-100 dark:bg-blue-900/30"
+          }`}
+        >
+          <Text
+            className={`text-xs font-outfit-bold ${
+              item.status === "Delivered"
+                ? "text-green-700 dark:text-green-300"
+                : "text-blue-700 dark:text-blue-300"
+            }`}
+          >
             {item.status}
           </Text>
         </View>
@@ -83,7 +91,7 @@ const OrderHistoryScreen: React.FC = () => {
         </View>
         <View className="flex-row items-center">
           <Text className="text-xs text-indigo-600 dark:text-indigo-400 font-outfit-medium mr-1">
-            {item.items.length} {item.items.length === 1 ? 'item' : 'items'}
+            {item.items.length} {item.items.length === 1 ? "item" : "items"}
           </Text>
           <Feather name="chevron-right" size={16} color="#4F46E5" />
         </View>
@@ -116,7 +124,11 @@ const OrderHistoryScreen: React.FC = () => {
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 16 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#4F46E5']} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#4F46E5"]}
+            />
           }
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center py-20">
@@ -127,7 +139,8 @@ const OrderHistoryScreen: React.FC = () => {
                 No orders yet
               </Text>
               <Text className="text-slate-500 dark:text-slate-400 text-center px-10">
-                You haven't placed any orders yet. Start shopping to see your history here!
+                You haven't placed any orders yet. Start shopping to see your
+                history here!
               </Text>
             </View>
           }

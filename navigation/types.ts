@@ -1,4 +1,4 @@
-import { NavigatorScreenParams } from '@react-navigation/native';
+import { NavigatorScreenParams } from "@react-navigation/native";
 
 export type MainTabParamList = {
   Home: undefined;
@@ -15,7 +15,7 @@ export type RootStackParamList = {
   Register: undefined;
   OrderHistory: undefined;
   OrderDetail: { order: any };
-  OrderConfirmation: { 
+  OrderConfirmation: {
     orderDetails: {
       orderId: string;
       transactionId: string;
@@ -35,6 +35,6 @@ export type RootStackParamList = {
         country: string;
       };
       orderDate: string;
-    }
+    };
   };
 };
