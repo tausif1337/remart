@@ -11,6 +11,7 @@ import {
   orderBy,
   serverTimestamp,
   setDoc,
+  updateDoc,
   writeBatch,
 } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
@@ -149,24 +150,41 @@ const getReviewsByProductId = async (productId) => {
 
 const cancelOrder = async (orderId) => {
   try {
-    console.log("[DEBUG] Cancelling order:", orderId);
+    const currentUser = auth.currentUser;
+    console.log("[DEBUG] Current Auth User:", currentUser ? currentUser.uid : "Not Authenticated");
+    console.log("[DEBUG] Attempting to cancel order:", orderId);
+    
     const orderDoc = doc(db, "orders", orderId);
     
-    // Update order status to Cancelled
-    await setDoc(
-      orderDoc,
-      {
-        status: "Cancelled",
-        cancelledAt: serverTimestamp(),
-      },
-      { merge: true }
-    );
+    // First, verify the order exists and get its data to check ownership if needed
+    const orderSnap = await getDoc(orderDoc);
+    if (!orderSnap.exists()) {
+      return { success: false, error: "Order not found" };
+    }
+    
+    const orderData = orderSnap.data();
+    console.log("[DEBUG] Order found. Owner ID:", orderData.userId);
+    
+    if (currentUser && orderData.userId !== currentUser.uid) {
+      console.warn("[WARN] Order ownership mismatch. Current user:", currentUser.uid, "Order owner:", orderData.userId);
+    }
+
+    // Update order status to Cancelled using updateDoc for better compatibility with rules
+    await updateDoc(orderDoc, {
+      status: "Cancelled",
+      cancelledAt: serverTimestamp(),
+    });
     
     console.log("[DEBUG] Order cancelled successfully:", orderId);
     return { success: true };
   } catch (error) {
     console.error("[ERROR] Error cancelling order:", error);
-    return { success: false, error: error.message };
+    // Provide more descriptive error messages based on common Firebase errors
+    let errorMessage = error.message;
+    if (error.code === 'permission-denied') {
+      errorMessage = "Permission denied. You might not have the rights to cancel this order.";
+    }
+    return { success: false, error: errorMessage };
   }
 };
 

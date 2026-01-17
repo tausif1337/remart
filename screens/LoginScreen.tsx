@@ -6,6 +6,7 @@ import {
   ScrollView,
   TextInput,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -88,6 +89,14 @@ const LoginScreen = () => {
         >
           <Feather name="chevron-left" size={24} color="#4F46E5" />
         </TouchableOpacity>
+
+        <View className="items-center mb-8">
+          <Image
+            source={require("../assets/remart-logo.png")}
+            className="w-48 h-20"
+            resizeMode="contain"
+          />
+        </View>
 
         <Text className="text-4xl font-outfit-black text-slate-900 dark:text-white mb-2">
           Welcome Back

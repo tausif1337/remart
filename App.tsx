@@ -13,6 +13,7 @@ import {
 import Toast from "react-native-toast-message";
 import AppNavigator from "./navigation/AppNavigator";
 import AppWrapper from "./AppWrapper";
+import SplashScreenComponent from "./components/SplashScreenComponent";
 
 const toastConfig = {
   success: ({ text1, text2, ...rest }: any) => (
@@ -71,21 +72,7 @@ export default function App() {
   });
 
   if (!fontsLoaded) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: "#F8FAFC",
-        }}
-      >
-        <ActivityIndicator size="large" color="#4F46E5" />
-        <Text style={{ marginTop: 20, color: "#64748B", fontFamily: "System" }}>
-          Loading App...
-        </Text>
-      </View>
-    );
+    return <SplashScreenComponent />;
   }
 
   return (

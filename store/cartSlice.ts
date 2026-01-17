@@ -22,8 +22,10 @@ const CART_STORAGE_KEY = "@remart_cart";
 // Save cart to AsyncStorage
 export const saveCartToStorage = async (cart: CartItem[]): Promise<void> => {
   try {
-    await AsyncStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
-    console.log("[DEBUG] Cart saved to storage:", cart.length, "items");
+    // Serialize cart items to plain objects to avoid Proxy issues
+    const serializedCart = JSON.parse(JSON.stringify(cart));
+    await AsyncStorage.setItem(CART_STORAGE_KEY, JSON.stringify(serializedCart));
+    console.log("[DEBUG] Cart saved to storage:", serializedCart.length, "items");
   } catch (error) {
     console.error("[ERROR] Failed to save cart to storage:", error);
   }
@@ -65,8 +67,6 @@ export const cartSlice = createSlice({
       } else {
         state.cart.push({ ...product, quantity });
       }
-      // Save to storage after state update
-      saveCartToStorage(state.cart);
       console.log("[DEBUG] Item added to cart, total items:", state.cart.length);
     },
     removeFromCart: (state, action: PayloadAction<string>) => {
@@ -83,8 +83,6 @@ export const cartSlice = createSlice({
 
       // Filter out only the item with the matching ID
       state.cart = state.cart.filter((item) => item.id !== productId);
-      // Save to storage after state update
-      saveCartToStorage(state.cart);
       console.log("[DEBUG] Item removed from cart, remaining items:", state.cart.length);
     },
     updateCartQuantity: (
@@ -96,15 +94,11 @@ export const cartSlice = createSlice({
 
       if (item) {
         item.quantity = quantity;
-        // Save to storage after state update
-        saveCartToStorage(state.cart);
         console.log("[DEBUG] Cart quantity updated for item:", productId);
       }
     },
     clearCart: (state) => {
       state.cart = [];
-      // Save to storage after state update
-      saveCartToStorage(state.cart);
       console.log("[DEBUG] Cart cleared");
     },
   },

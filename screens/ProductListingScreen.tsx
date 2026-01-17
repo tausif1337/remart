@@ -7,6 +7,7 @@ import {
   useWindowDimensions,
   Platform,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -114,12 +115,11 @@ export default function ProductListingScreen() {
         {/* Header Section */}
         <View className="flex-row justify-between items-center mb-8 mt-4">
           <View>
-            <Text className="text-sm font-outfit-bold text-slate-500 dark:text-slate-400 uppercase mb-1">
-              Welcome to
-            </Text>
-            <Text className="text-4xl font-outfit-black text-indigo-600 dark:text-indigo-400">
-              Remart
-            </Text>
+            <Image
+              source={require("../assets/remart-logo.png")}
+              className="w-32 h-10"
+              resizeMode="contain"
+            />
           </View>
 
           <View className="flex-row items-center gap-3">

@@ -8,6 +8,7 @@ import { setUser, setLoading } from './store/authSlice';
 import { hydrateCart, loadCartFromStorage } from './store/cartSlice';
 import { hydrateWishlist, loadWishlistFromStorage } from './store/wishlistSlice';
 import { View, ActivityIndicator } from 'react-native';
+import SplashScreenComponent from './components/SplashScreenComponent';
 
 const AuthObserver: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const dispatch = useDispatch();
@@ -56,11 +57,7 @@ const AuthObserver: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   }, [dispatch]);
 
   if (isLoading || !isCartHydrated || !isWishlistHydrated) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8FAFC' }}>
-        <ActivityIndicator size="large" color="#4F46E5" />
-      </View>
-    );
+    return <SplashScreenComponent />;
   }
 
   return <>{children}</>;

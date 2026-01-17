@@ -18,8 +18,10 @@ const WISHLIST_STORAGE_KEY = "@remart_wishlist";
 // Save wishlist to AsyncStorage
 export const saveWishlistToStorage = async (wishlist: Product[]): Promise<void> => {
   try {
-    await AsyncStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(wishlist));
-    console.log("[DEBUG] Wishlist saved to storage:", wishlist.length, "items");
+    // Serialize wishlist items to plain objects to avoid Proxy issues
+    const serializedWishlist = JSON.parse(JSON.stringify(wishlist));
+    await AsyncStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(serializedWishlist));
+    console.log("[DEBUG] Wishlist saved to storage:", serializedWishlist.length, "items");
   } catch (error) {
     console.error("[ERROR] Failed to save wishlist to storage:", error);
   }
@@ -55,7 +57,6 @@ export const wishlistSlice = createSlice({
 
       if (!existingItem) {
         state.items.push(product);
-        saveWishlistToStorage(state.items);
         console.log("[DEBUG] Item added to wishlist, total items:", state.items.length);
       }
     },
@@ -73,7 +74,6 @@ export const wishlistSlice = createSlice({
 
       // Filter out only the item with the matching ID
       state.items = state.items.filter((item: Product) => item.id !== productId);
-      saveWishlistToStorage(state.items);
       console.log("[DEBUG] Item removed from wishlist, remaining items:", state.items.length);
     },
     toggleWishlist: (state, action: PayloadAction<Product>) => {
@@ -87,12 +87,10 @@ export const wishlistSlice = createSlice({
         // Add to wishlist
         state.items.push(product);
       }
-      saveWishlistToStorage(state.items);
       console.log("[DEBUG] Wishlist toggled, total items:", state.items.length);
     },
     clearWishlist: (state) => {
       state.items = [];
-      saveWishlistToStorage(state.items);
       console.log("[DEBUG] Wishlist cleared");
     },
   },
