@@ -1,5 +1,5 @@
 import "./global.css";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, ActivityIndicator, Text } from "react-native";
 
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -64,6 +64,7 @@ const toastConfig = {
 };
 
 export default function App() {
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
   const [fontsLoaded] = useFonts({
     "Outfit-Regular": Outfit_400Regular,
     "Outfit-Medium": Outfit_500Medium,
@@ -71,7 +72,14 @@ export default function App() {
     "Outfit-Black": Outfit_900Black,
   });
 
-  if (!fontsLoaded) {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMinTimeElapsed(true);
+    }, 2000); // 2 seconds minimum
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!fontsLoaded || !minTimeElapsed) {
     return <SplashScreenComponent />;
   }
 
