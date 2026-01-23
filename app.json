@@ -6,7 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/remart-logo.png",
     "userInterfaceStyle": "light",
-
     "splash": {
       "image": "./assets/remart-splash-screen.png",
       "resizeMode": "cover",
@@ -26,6 +25,14 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-font", "expo-dev-client"]
+    "plugins": [
+      "expo-font",
+      "expo-dev-client"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "0d089bc6-eb85-46e5-a363-4877e09c7009"
+      }
+    }
   }
 }
