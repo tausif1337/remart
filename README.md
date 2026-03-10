@@ -143,8 +143,8 @@ A modern, feature-rich e-commerce mobile application built with React Native and
 
 Before you begin, ensure you have the following installed:
 - **Node.js** (v18 or higher)
-- **npm** or **yarn**
-- **Expo CLI**: `npm install -g expo-cli`
+- **pnpm**: `npm install -g pnpm`
+- **Expo CLI**: `pnpm install -g expo-cli`
 - **Git**
 - **iOS Simulator** (Mac only) or **Android Studio** (for Android development)
 
@@ -158,9 +158,7 @@ cd remart
 ### Step 2: Install Dependencies
 
 ```bash
-npm install
-# or
-yarn install
+pnpm install
 ```
 
 ### Step 3: Environment Configuration
@@ -191,9 +189,9 @@ SSLCOMMERZ_STORE_PASSWORD=your_store_password
 ### Step 4: Start Development Server
 
 ```bash
-npm start
+pnpm start
 # or
-expo start
+npx expo start
 ```
 
 ### Step 5: Run on Device/Simulator
@@ -540,12 +538,12 @@ if (response.status === 'SUCCESS') {
 
 ```bash
 # Start Expo development server
-npm start
+pnpm start
 
 # Run on specific platform
-npm run ios       # iOS simulator
-npm run android   # Android emulator
-npm run web       # Web browser
+pnpm run ios       # iOS simulator
+pnpm run android   # Android emulator
+pnpm run web       # Web browser
 ```
 
 ### Debug Logging
