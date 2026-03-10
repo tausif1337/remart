@@ -60,7 +60,7 @@ export const MOCK_PRODUCTS = [
     price: 89.99,
     category: "furniture",
     image:
-      "https://images.unsplash.com/photo-1507473888900-52e1ad14db3d?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1718752061581-493a14540480?q=80&w=1000&auto=format&fit=crop",
     rating: 4.2,
     stock: 0,
     lowStockThreshold: 5,
@@ -96,7 +96,7 @@ export const MOCK_PRODUCTS = [
     price: 59.99,
     category: "electronics",
     image:
-      "https://images.unsplash.com/photo-1598436908734-73bae32a3b34?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1613141412501-9012977f1969?q=80&w=1000&auto=format&fit=crop",
     rating: 4.7,
     stock: 35,
     lowStockThreshold: 10,
@@ -115,7 +115,7 @@ export const MOCK_PRODUCTS = [
     price: 199.99,
     category: "furniture",
     image:
-      "https://images.unsplash.com/photo-1550966872-44e3d2b0e465?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1542372147193-a7aca54189cd?q=80&w=1000&auto=format&fit=crop",
     rating: 4.4,
     stock: 8,
     lowStockThreshold: 5,
@@ -133,7 +133,7 @@ export const MOCK_PRODUCTS = [
     price: 34.99,
     category: "sports",
     image:
-      "https://images.unsplash.com/photo-1576671418898-8a6c3d68e641?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1646239646963-b0b9be56d6b5?q=80&w=1000&auto=format&fit=crop",
     rating: 4.3,
     stock: 50,
     lowStockThreshold: 15,
@@ -152,7 +152,7 @@ export const MOCK_PRODUCTS = [
     price: 129.99,
     category: "electronics",
     image:
-      "https://images.unsplash.com/photo-1613047508032-34a0d5935d9a?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?q=80&w=1000&auto=format&fit=crop",
     rating: 4.5,
     stock: 22,
     lowStockThreshold: 10,
@@ -171,7 +171,7 @@ export const MOCK_PRODUCTS = [
     price: 29.99,
     category: "furniture",
     image:
-      "https://images.unsplash.com/photo-1596466596120-2a8e4b5d2c3a?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1644463589256-02679b9c0767?q=80&w=1000&auto=format&fit=crop",
     rating: 4.1,
     stock: 40,
     lowStockThreshold: 15,
@@ -300,7 +300,7 @@ export const MOCK_PRODUCTS = [
     price: 599.99,
     category: "furniture",
     image:
-      "https://images.unsplash.com/photo-1556228453-efd17c9d9b39?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1604578762246-41134e37f9cc?q=80&w=1000&auto=format&fit=crop",
     rating: 4.6,
     stock: 7,
     lowStockThreshold: 3,
@@ -318,7 +318,7 @@ export const MOCK_PRODUCTS = [
     price: 79.99,
     category: "electronics",
     image:
-      "https://images.unsplash.com/photo-1574842268427-9a3f03d0d401?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1576243345690-4e4b79b63288?q=80&w=1000&auto=format&fit=crop",
     rating: 4.2,
     stock: 30,
     lowStockThreshold: 10,
@@ -373,7 +373,7 @@ export const MOCK_PRODUCTS = [
     price: 39.99,
     category: "home",
     image:
-      "https://images.unsplash.com/photo-1609434263767-49dbb224ecda?q=80&w=1000&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1718815416565-c65944a5ec14?q=80&w=1000&auto=format&fit=crop",
     rating: 4.0,
     description:
       "Quiet desk fan with adjustable height and multiple speed settings. Perfect for personal cooling.",
