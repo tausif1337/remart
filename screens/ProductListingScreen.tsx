@@ -3,28 +3,23 @@ import {
   View,
   Text,
   FlatList,
-  TouchableOpacity,
   useWindowDimensions,
-  Platform,
   ActivityIndicator,
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
 import { Feather } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, CompositeNavigationProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { RootStackParamList, MainTabParamList } from "../navigation/types";
-import { useSelector } from "react-redux";
-import { Product, CartItem } from "../store/types";
+import { Product } from "../store/types";
 import CartIconWithBadge from "../components/CartIconWithBadge";
 import WishlistIconWithBadge from "../components/WishlistIconWithBadge";
 import ProductCard from "../components/ProductCard";
 import SearchBar from "../components/SearchBar";
 import CategoryFilter from "../components/CategoryFilter";
 import { getProducts, seedDatabase } from "../utils/firebaseServices";
-import { CompositeNavigationProp } from "@react-navigation/native";
-import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 
 const CATEGORIES = ["All", "electronics", "furniture", "fashion", "decoration"];
 
@@ -35,9 +30,6 @@ type NavigationProp = CompositeNavigationProp<
 
 export default function ProductListingScreen() {
   const navigation = useNavigation<NavigationProp>();
-
-  // Get cart from Redux store
-  const cart = useSelector((state: any) => state.cart.cart);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,11 +69,6 @@ export default function ProductListingScreen() {
     fetchProducts();
   }, []);
 
-  const cartCount = cart.reduce(
-    (acc: number, item: CartItem) => acc + item.quantity,
-    0
-  );
-
   // Responsive column calculation
   const numColumns = width > 1024 ? 4 : width > 768 ? 3 : 2;
   const contentPadding = width > 768 ? 32 : 24;
@@ -102,7 +89,6 @@ export default function ProductListingScreen() {
   };
 
   const navigateToWishlist = () => {
-    console.log("[DEBUG] Navigating to Wishlist");
     navigation.navigate("Wishlist");
   };
 

@@ -1,5 +1,5 @@
 import { View, Text, Image, TouchableOpacity, Pressable } from "react-native";
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Feather } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,11 +15,7 @@ interface ProductCardProps {
 export default function ProductCard({ product, onPress }: ProductCardProps) {
   const dispatch = useDispatch();
   const wishlist = useSelector((state: any) => state.wishlist.items);
-  const [isWishlisted, setIsWishlisted] = useState(false);
-
-  useEffect(() => {
-    setIsWishlisted(wishlist.some((item: Product) => item.id === product.id));
-  }, [wishlist, product]);
+  const isWishlisted = wishlist.some((item: Product) => item.id === product.id);
 
   const handleAddToCart = () => {
     dispatch(addToCart({ product, quantity: 1 }));
