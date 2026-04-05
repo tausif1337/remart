@@ -65,11 +65,23 @@ const LoginScreen = () => {
 
       navigation.goBack();
     } catch (error: any) {
-      console.error("Login error:", error);
+      console.error("Login error code:", error.code);
+      console.error("Login error message:", error.message);
+      
+      let errorMessage = "An unexpected error occurred. Please try again.";
+      
+      if (error.code === "auth/invalid-credential" || error.code === "auth/user-not-found" || error.code === "auth/wrong-password") {
+        errorMessage = "Invalid email or password. If you don't have an account, please Sign Up.";
+      } else if (error.code === "auth/too-many-requests") {
+        errorMessage = "Too many failed attempts. Please try again later or reset your password.";
+      } else if (error.code === "auth/network-request-failed") {
+        errorMessage = "Network error. Please check your internet connection.";
+      }
+
       Toast.show({
         type: "error",
         text1: "Login Failed",
-        text2: error.message || "An unexpected error occurred",
+        text2: errorMessage,
       });
     } finally {
       setLoading(false);

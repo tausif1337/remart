@@ -71,15 +71,15 @@ const CheckoutScreen: React.FC = () => {
   const user = useSelector((state: any) => state.auth.user);
 
   const [formData, setFormData] = useState<FormData>({
-    firstName: "Md. Tausif",
-    lastName: "Hossain",
-    email: "tausif1337@gmail.com",
-    phone: "01748181448",
-    address: "53/A, Upazila Road, South Sastapur, Fatullah",
-    city: "Narayanganj",
-    state: "Narayanganj",
-    zipCode: "1420",
-    country: "Bangladesh",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    country: "",
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
