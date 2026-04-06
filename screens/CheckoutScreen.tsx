@@ -20,10 +20,13 @@ import { WebView, WebViewNavigation } from "react-native-webview";
 import { apiService } from "../utils/apiService";
 import { saveOrder } from "../utils/firebaseServices";
 
+// Redirect URLs for SSLCommerz payment gateway
+// These are where the payment gateway will send the user after the transaction
 const SUCCESS_URL = "https://remart-app.com/payment-success";
 const FAIL_URL = "https://remart-app.com/payment-fail";
 const CANCEL_URL = "https://remart-app.com/payment-cancel";
 
+// Data structure for the checkout form
 interface FormData {
   firstName: string;
   lastName: string;
@@ -36,6 +39,7 @@ interface FormData {
   country: string;
 }
 
+// Interface to track errors for each field
 interface FormErrors {
   firstName?: string;
   lastName?: string;
@@ -48,7 +52,10 @@ interface FormErrors {
   country?: string;
 }
 
-// Validation functions
+/**
+ * Validation functions using Regular Expressions (Regex)
+ * These ensure the user enters data in the correct format
+ */
 const validateEmail = (email: string) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
@@ -65,11 +72,13 @@ const validateZipCode = (zipCode: string) => {
 };
 
 const CheckoutScreen: React.FC = () => {
+  // Hooks for navigation, redux dispatch, and global state
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const dispatch = useDispatch();
   const cart = useSelector((state: any) => state.cart.cart);
   const user = useSelector((state: any) => state.auth.user);
 
+  // Local state for handling form data and application UI state
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
@@ -83,12 +92,13 @@ const CheckoutScreen: React.FC = () => {
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [showWebView, setShowWebView] = useState(false);
-  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
-  const [currentInvoice, setCurrentInvoice] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false); // Loading state for payment
+  const [showWebView, setShowWebView] = useState(false); // Controls the payment modal
+  const [paymentUrl, setPaymentUrl] = useState<string | null>(null); // URL from payment gateway
+  const [currentInvoice, setCurrentInvoice] = useState<string | null>(null); // Unique ID for this order
 
-  // Memoized total calculation
+  // useMemo caches the result so it only recalculates when 'cart' changes
+  // This is a performance optimization for expensive calculations
   const totalAmount = useMemo(() => {
     return cart.reduce(
       (total: number, item: CartItem) => total + item.price * item.quantity,
@@ -96,6 +106,10 @@ const CheckoutScreen: React.FC = () => {
     );
   }, [cart]);
 
+  /**
+   * Main form validation logic
+   * Checks every required field and sets error messages if any fail
+   */
   const validateForm = useCallback((): boolean => {
     const newErrors: FormErrors = {};
 
@@ -156,17 +170,21 @@ const CheckoutScreen: React.FC = () => {
     }
 
     setErrors(newErrors);
+    // Returns true if there are zero errors
     return Object.keys(newErrors).length === 0;
   }, [formData]);
 
+  /**
+   * Universal change handler for all form fields
+   * Includes formatting logic for specific fields (auto-capitalization, stripping unwanted chars)
+   */
   const handleChange = useCallback((field: keyof FormData, value: string) => {
-    // Format address as user types
+    // Format address: Capitalize the first letter of each word and normalize spaces
     if (field === "address") {
-      // Capitalize the first letter of each word and normalize spaces
       const formattedValue = value.replace(/\b\w/g, (l) => l.toUpperCase());
       setFormData((prev) => ({ ...prev, [field]: formattedValue }));
 
-      // Clear error when user starts typing
+      // Clear error as soon as user types something
       setErrors((prev) => {
         if (prev[field]) {
           const newErrors = { ...prev };
@@ -176,12 +194,11 @@ const CheckoutScreen: React.FC = () => {
         return prev;
       });
     }
-    // Format ZIP code as user types
+    // Format ZIP code: Remove non-alphanumeric characters
     else if (field === "zipCode") {
       const alphanumericValue = value.replace(/[^A-Za-z0-9\s\-]/g, "");
       setFormData((prev) => ({ ...prev, [field]: alphanumericValue }));
 
-      // Clear error when user starts typing
       setErrors((prev) => {
         if (prev[field]) {
           const newErrors = { ...prev };
@@ -191,12 +208,11 @@ const CheckoutScreen: React.FC = () => {
         return prev;
       });
     }
-    // Format phone number as user types
+    // Format phone: Remove non-digit characters except +, -, (, )
     else if (field === "phone") {
       const phoneValue = value.replace(/[^+\d\s\-\(\)]/g, "");
       setFormData((prev) => ({ ...prev, [field]: phoneValue }));
 
-      // Clear error when user starts typing
       setErrors((prev) => {
         if (prev[field]) {
           const newErrors = { ...prev };
@@ -206,12 +222,11 @@ const CheckoutScreen: React.FC = () => {
         return prev;
       });
     }
-    // Format city and state to capitalize first letter of each word
+    // Format geographic fields to capitalize first letter of each word
     else if (field === "city" || field === "state" || field === "country") {
       const capitalizedValue = value.replace(/\b\w/g, (l) => l.toUpperCase());
       setFormData((prev) => ({ ...prev, [field]: capitalizedValue }));
 
-      // Clear error when user starts typing
       setErrors((prev) => {
         if (prev[field]) {
           const newErrors = { ...prev };
@@ -221,11 +236,10 @@ const CheckoutScreen: React.FC = () => {
         return prev;
       });
     }
-    // For other fields
+    // Default handling for other fields
     else {
       setFormData((prev) => ({ ...prev, [field]: value }));
 
-      // Clear error when user starts typing
       setErrors((prev) => {
         if (prev[field]) {
           const newErrors = { ...prev };
@@ -237,6 +251,12 @@ const CheckoutScreen: React.FC = () => {
     }
   }, []);
 
+  /**
+   * Initiates the payment process
+   * 1. Validates the form
+   * 2. Calls our API to get a payment session URL from SSLCommerz
+   * 3. Opens the URL in a WebView modal
+   */
   const handlePayment = useCallback(async () => {
     if (!validateForm()) {
       Toast.show({
@@ -254,7 +274,7 @@ const CheckoutScreen: React.FC = () => {
     console.log("Initiating payment process for invoice:", invoiceNumber);
 
     try {
-      // Show processing toast
+      // Show informative toast to user
       Toast.show({
         type: "info",
         text1: "Processing Order",
@@ -262,7 +282,7 @@ const CheckoutScreen: React.FC = () => {
         visibilityTime: 2000,
       });
 
-      // Process payment through SSLCommerz API
+      // Prepare request payload for SSLCommerz
       const response = await apiService.initiatePayment({
         total_amount: Number(totalAmount.toFixed(2)),
         currency: "BDT",
@@ -287,6 +307,7 @@ const CheckoutScreen: React.FC = () => {
       console.log("Payment initiation response received:", response);
 
       if (response.status === "SUCCESS" && response.GatewayPageURL) {
+        // If API succeeded, we get a URL to display in our WebView
         console.log(
           "Payment URL generated successfully:",
           response.GatewayPageURL
@@ -294,6 +315,7 @@ const CheckoutScreen: React.FC = () => {
         setPaymentUrl(response.GatewayPageURL);
         setShowWebView(true);
       } else {
+        // Handle explicit failure from the API
         console.warn(
           "Payment initiation failed with status:",
           response.status,
@@ -322,14 +344,19 @@ const CheckoutScreen: React.FC = () => {
     }
   }, [validateForm, formData, cart, totalAmount, navigation]);
 
+  /**
+   * Tracks URL changes inside the WebView modal
+   * Used to detect if the user reached a success, fail, or cancel page
+   */
   const handleNavigationStateChange = useCallback(
     (navState: WebViewNavigation) => {
       const { url } = navState;
       console.log("WebView navigating to:", url);
 
+      // 1. Success Case
       if (url.startsWith(SUCCESS_URL)) {
         console.log("Payment success detected!");
-        setShowWebView(false);
+        setShowWebView(false); // Close Modal
         setPaymentUrl(null);
 
         Toast.show({
@@ -339,11 +366,11 @@ const CheckoutScreen: React.FC = () => {
           visibilityTime: 3000,
         });
 
-        // Clear the cart on successful payment
-        dispatch(clearCart());
+        // Update application state
+        dispatch(clearCart()); // Empty the cart now that it's paid
         console.log("Cart cleared after successful payment");
 
-        // Prepare order details for confirmation screen
+        // Structure the order data to save in our database
         const orderDetails = {
           orderId: currentInvoice || "N/A",
           transactionId: "SSL-" + Date.now(),
@@ -368,7 +395,7 @@ const CheckoutScreen: React.FC = () => {
           orderDate: new Date().toISOString(),
         };
 
-        // Save order to Firebase
+        // Async save to Firebase (database)
         saveOrder(orderDetails).then((res) => {
           if (res.success) {
             console.log("Order saved to Firebase with ID:", res.id);
@@ -377,27 +404,30 @@ const CheckoutScreen: React.FC = () => {
           }
         });
 
+        // Navigate to final confirmation screen
         navigation.navigate("OrderConfirmation", { orderDetails });
-      } else if (url.startsWith(CANCEL_URL)) {
+      } 
+      // 2. Cancel Case
+      else if (url.startsWith(CANCEL_URL)) {
         console.log("Payment cancel detected");
         setShowWebView(false);
         setPaymentUrl(null);
         Toast.show({
           type: "info",
           text1: "Payment Canceled",
-          text2:
-            "You have canceled the payment process. Your cart items are safe.",
+          text2: "You have canceled the payment process. Your cart items are safe.",
           visibilityTime: 4000,
         });
-      } else if (url.startsWith(FAIL_URL)) {
+      } 
+      // 3. Fail Case
+      else if (url.startsWith(FAIL_URL)) {
         console.log("Payment fail detected");
         setShowWebView(false);
         setPaymentUrl(null);
         Toast.show({
           type: "error",
           text1: "Payment Failed",
-          text2:
-            "The payment transaction failed or was declined. Please try again.",
+          text2: "The payment transaction failed or was declined. Please try again.",
           visibilityTime: 4000,
         });
       }
@@ -422,6 +452,7 @@ const CheckoutScreen: React.FC = () => {
         contentContainerStyle={{ paddingBottom: 120 }}
         keyboardShouldPersistTaps="handled"
       >
+        {/* Header Section */}
         <View className="mb-6">
           <TouchableOpacity
             onPress={() => navigation.goBack()}
@@ -437,7 +468,7 @@ const CheckoutScreen: React.FC = () => {
           </Text>
         </View>
 
-        {/* Order Summary */}
+        {/* Order Summary Section: Displays what user is buying */}
         <View className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 mb-6">
           <Text className="text-lg font-outfit-bold text-slate-900 dark:text-white mb-3">
             Order Summary
@@ -466,6 +497,8 @@ const CheckoutScreen: React.FC = () => {
               Your cart is empty
             </Text>
           )}
+          
+          {/* Total Calculation Display */}
           <View className="flex-row justify-between pt-3 mt-2">
             <Text className="text-lg font-outfit-bold text-slate-900 dark:text-white">
               Total:
@@ -474,6 +507,8 @@ const CheckoutScreen: React.FC = () => {
               ৳{totalAmount.toFixed(2)}
             </Text>
           </View>
+
+          {/* Quick link to go back and edit the cart */}
           <TouchableOpacity
             className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700"
             onPress={() => navigation.navigate("MainTab", { screen: "Cart" })}
@@ -484,12 +519,13 @@ const CheckoutScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Personal Information */}
+        {/* Personal Information Section: Collects basic customer details */}
         <View className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 mb-6">
           <Text className="text-lg font-outfit-bold text-slate-900 dark:text-white mb-4">
             Personal Information
           </Text>
 
+          {/* Row for First and Last Name */}
           <View className="flex-row gap-3 mb-4">
             <View className="flex-1">
               <Text className="text-sm font-outfit-bold text-slate-700 dark:text-slate-300 mb-1">
@@ -501,7 +537,7 @@ const CheckoutScreen: React.FC = () => {
                 placeholder="John"
                 className={`h-12 px-4 bg-slate-50 dark:bg-slate-700 rounded-lg border ${
                   errors.firstName
-                    ? "border-red-500"
+                    ? "border-red-500" // Highlight border if there's an error
                     : "border-slate-200 dark:border-slate-600"
                 } text-slate-900 dark:text-white`}
               />
@@ -534,6 +570,7 @@ const CheckoutScreen: React.FC = () => {
             </View>
           </View>
 
+          {/* Email Input */}
           <View className="mb-4">
             <Text className="text-sm font-outfit-bold text-slate-700 dark:text-slate-300 mb-1">
               Email Address *
@@ -555,6 +592,7 @@ const CheckoutScreen: React.FC = () => {
             )}
           </View>
 
+          {/* Phone Number Input */}
           <View>
             <Text className="text-sm font-outfit-bold text-slate-700 dark:text-slate-300 mb-1">
               Phone Number *
@@ -576,12 +614,13 @@ const CheckoutScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Shipping Address */}
+        {/* Shipping Address Section: Collects delivery location */}
         <View className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 mb-6">
           <Text className="text-lg font-outfit-bold text-slate-900 dark:text-white mb-4">
             Shipping Address
           </Text>
 
+          {/* Full Street Address */}
           <View className="mb-4">
             <Text className="text-sm font-outfit-bold text-slate-700 dark:text-slate-300 mb-1">
               Address *
@@ -603,6 +642,7 @@ const CheckoutScreen: React.FC = () => {
             )}
           </View>
 
+          {/* Row for City and State */}
           <View className="flex-row gap-3 mb-4">
             <View className="flex-1">
               <Text className="text-sm font-outfit-bold text-slate-700 dark:text-slate-300 mb-1">
@@ -645,6 +685,7 @@ const CheckoutScreen: React.FC = () => {
             </View>
           </View>
 
+          {/* Row for ZIP Code and Country */}
           <View className="flex-row gap-3 mb-4">
             <View className="flex-1">
               <Text className="text-sm font-outfit-bold text-slate-700 dark:text-slate-300 mb-1">
@@ -690,11 +731,12 @@ const CheckoutScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Payment Method Selection */}
+        {/* Payment Method Selection Section */}
         <View className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 mb-6">
           <Text className="text-lg font-outfit-bold text-slate-900 dark:text-white mb-4">
             Payment Method
           </Text>
+          {/* SSLCommerz option (currently hardcoded as the only option) */}
           <View className="flex-row items-center p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl">
             <View className="w-12 h-12 bg-white dark:bg-slate-700 rounded-full items-center justify-center mr-4 shadow-sm">
               <Feather name="credit-card" size={24} color="#4F46E5" />
@@ -707,10 +749,12 @@ const CheckoutScreen: React.FC = () => {
                 Secure Hosted Payment
               </Text>
             </View>
+            {/* Checkmark icon indicating selection */}
             <View className="bg-indigo-600 rounded-full p-1">
               <Feather name="check" size={14} color="#FFFFFF" />
             </View>
           </View>
+          {/* Security Assurance Badge */}
           <View className="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
             <Text className="text-green-700 dark:text-green-300 text-sm">
               <Feather name="shield" size={14} /> Your payment is encrypted and
@@ -719,15 +763,16 @@ const CheckoutScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Place Order Button */}
+        {/* The big "Place Order" button at the bottom */}
         <TouchableOpacity
           className={`h-14 rounded-xl items-center justify-center mt-4 ${
             cart.length > 0 && !isProcessing ? "bg-indigo-600" : "bg-gray-400"
           }`}
           onPress={handlePayment}
-          disabled={isProcessing || cart.length === 0}
+          disabled={isProcessing || cart.length === 0} // Prevents double-clicking or empty orders
         >
           {isProcessing ? (
+            // Show loading spinner when request is in progress
             <View className="flex-row items-center">
               <Feather
                 name="loader"
@@ -740,6 +785,7 @@ const CheckoutScreen: React.FC = () => {
               </Text>
             </View>
           ) : (
+            // Default appearance
             <View className="flex-row items-center">
               <Text className="text-white font-outfit-bold text-lg">
                 {cart.length > 0
@@ -751,13 +797,14 @@ const CheckoutScreen: React.FC = () => {
         </TouchableOpacity>
       </ScrollView>
 
-      {/* SSLCommerz Payment Modal */}
+      {/* SSLCommerz Payment Modal: Opens a mini-browser window (WebView) */}
       <Modal
         visible={showWebView}
         animationType="slide"
-        onRequestClose={() => setShowWebView(false)}
+        onRequestClose={() => setShowWebView(false)} // Android hardware back button handler
       >
         <SafeAreaView className="flex-1 bg-white">
+          {/* Modal Header: Title and Close button */}
           <View className="flex-row items-center justify-between px-4 py-3 border-b border-slate-100">
             <Text className="text-lg font-outfit-bold text-slate-900">
               SSLCommerz Payment
@@ -777,14 +824,17 @@ const CheckoutScreen: React.FC = () => {
               <Feather name="x" size={24} color="#1E293B" />
             </TouchableOpacity>
           </View>
+          
+          {/* The actual payment page rendered from the provided URL */}
           {paymentUrl ? (
             <WebView
               source={{ uri: paymentUrl }}
-              onNavigationStateChange={handleNavigationStateChange}
+              onNavigationStateChange={handleNavigationStateChange} // Listens for Success/Fail redirects
               startInLoadingState={true}
               javaScriptEnabled={true}
               domStorageEnabled={true}
               renderLoading={() => (
+                // Centered loading spinner for the WebView content
                 <View className="absolute inset-0 items-center justify-center bg-white">
                   <ActivityIndicator size="large" color="#4F46E5" />
                 </View>

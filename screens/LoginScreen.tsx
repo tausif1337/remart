@@ -21,16 +21,25 @@ import Toast from "react-native-toast-message";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
+/**
+ * LoginScreen handles user authentication.
+ * It connects to Firebase Auth and updates the global Redux status on success.
+ */
 const LoginScreen = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation<NavigationProp>();
 
+  // Form state hooks
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // Toggles password visibility
 
+  /**
+   * Main login handler
+   */
   const handleLogin = async () => {
+    // Basic frontend check
     if (!email || !password) {
       Toast.show({
         type: "error",
@@ -42,6 +51,7 @@ const LoginScreen = () => {
 
     setLoading(true);
     try {
+      // Firebase call to authenticate user
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
@@ -49,6 +59,7 @@ const LoginScreen = () => {
       );
       const user = userCredential.user;
 
+      // Update global Redux state with logged-in user info
       dispatch(
         setUser({
           id: user.uid,
@@ -63,11 +74,12 @@ const LoginScreen = () => {
         text2: `Welcome back, ${user.displayName || user.email}`,
       });
 
+      // Go back to the screen user was previously on (e.g. Checkout or Profile)
       navigation.goBack();
     } catch (error: any) {
       console.error("Login error code:", error.code);
-      console.error("Login error message:", error.message);
       
+      // Beginner tip: Always map cryptic error codes to friendly messages!
       let errorMessage = "An unexpected error occurred. Please try again.";
       
       if (error.code === "auth/invalid-credential" || error.code === "auth/user-not-found" || error.code === "auth/wrong-password") {
@@ -95,6 +107,7 @@ const LoginScreen = () => {
         className="px-6 py-12"
         keyboardShouldPersistTaps="handled"
       >
+        {/* Back navigation */}
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           className="w-12 h-12 bg-white dark:bg-slate-800 rounded-full items-center justify-center mb-8 shadow-sm"
@@ -102,6 +115,7 @@ const LoginScreen = () => {
           <Feather name="chevron-left" size={24} color="#4F46E5" />
         </TouchableOpacity>
 
+        {/* Brand/App Logo */}
         <View className="items-center mb-8">
           <Image
             source={require("../assets/remart-logo.png")}
@@ -118,6 +132,7 @@ const LoginScreen = () => {
         </Text>
 
         <View className="space-y-4">
+          {/* Email Input Field */}
           <View className="mb-4">
             <Text className="text-sm font-outfit-bold text-slate-700 dark:text-slate-300 mb-2">
               Email Address
@@ -136,6 +151,7 @@ const LoginScreen = () => {
             </View>
           </View>
 
+          {/* Password Input Field */}
           <View className="mb-8">
             <Text className="text-sm font-outfit-bold text-slate-700 dark:text-slate-300 mb-2">
               Password
@@ -148,8 +164,9 @@ const LoginScreen = () => {
                 placeholderTextColor="#94A3B8"
                 value={password}
                 onChangeText={setPassword}
-                secureTextEntry={!showPassword}
+                secureTextEntry={!showPassword} // Controls hidden dots vs plain text
               />
+              {/* eye icon to toggle password visibility */}
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                 <Feather
                   name={showPassword ? "eye-off" : "eye"}
@@ -161,6 +178,7 @@ const LoginScreen = () => {
           </View>
         </View>
 
+        {/* Forgot Password Link */}
         <TouchableOpacity
           onPress={() => navigation.navigate("ForgotPassword")}
           className="mb-6"
@@ -170,6 +188,7 @@ const LoginScreen = () => {
           </Text>
         </TouchableOpacity>
 
+        {/* Login Button */}
         <TouchableOpacity
           onPress={handleLogin}
           disabled={loading}
@@ -184,6 +203,7 @@ const LoginScreen = () => {
           )}
         </TouchableOpacity>
 
+        {/* Register navigation link */}
         <View className="flex-row justify-center mt-8">
           <Text className="text-slate-500 font-outfit-regular">
             Don't have an account?{" "}

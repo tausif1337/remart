@@ -24,15 +24,25 @@ import { cancelOrder } from "../utils/firebaseServices";
 
 type OrderDetailRouteProp = RouteProp<RootStackParamList, "OrderDetail">;
 
+/**
+ * OrderDetailScreen shows the full history and status of a specific past order.
+ * It allows users to re-add items to their cart or cancel an active order.
+ */
 const OrderDetailScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const route = useRoute<OrderDetailRouteProp>();
   const dispatch = useDispatch();
+  
+  // Extracting the specific order object passed via navigation
   const { order } = route.params;
   
+  // Local state for UI feedback during cancellation process
   const [isCancelling, setIsCancelling] = useState(false);
-  const [orderStatus, setOrderStatus] = useState(order.status);
+  const [orderStatus, setOrderStatus] = useState(order.status); // Initialized with order status
 
+  /**
+   * Helper to format raw date data into a user-friendly format
+   */
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -43,10 +53,13 @@ const OrderDetailScreen: React.FC = () => {
     });
   };
 
+  /**
+   * Loop through items from this old order and add them back to the active cart
+   */
   const handleReorder = () => {
     console.log("[DEBUG] Reordering items from order:", order.orderId || order.id);
     order.items.forEach((item: any) => {
-      // Re-constructing the product object as needed by addToCart
+      // Re-constructing the product object as needed by the cart slice
       const product = {
         id: item.id,
         name: item.name,
@@ -64,11 +77,15 @@ const OrderDetailScreen: React.FC = () => {
       visibilityTime: 2000,
     });
 
+    // Take user to the cart screen after a short delay
     setTimeout(() => {
       navigation.navigate("MainTab", { screen: "Cart" });
     }, 1500);
   };
 
+  /**
+   * Shows a confirmation pop-up (Alert) before calling the cancel API
+   */
   const handleCancelOrder = () => {
     console.log("[DEBUG] Cancel order requested:", order.orderId || order.id);
     
@@ -82,16 +99,17 @@ const OrderDetailScreen: React.FC = () => {
         },
         {
           text: "Yes, Cancel Order",
-          style: "destructive",
+          style: "destructive", // Red text on iOS
           onPress: async () => {
             setIsCancelling(true);
             console.log("[DEBUG] Proceeding with order cancellation...");
             
             try {
+              // Call external firebase utility to update database
               const result = await cancelOrder(order.id);
               
               if (result.success) {
-                setOrderStatus("Cancelled");
+                setOrderStatus("Cancelled"); // Update UI manually to match database
                 Toast.show({
                   type: "success",
                   text1: "Order Cancelled",
@@ -127,6 +145,7 @@ const OrderDetailScreen: React.FC = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-slate-900">
+      {/* Dynamic Header with Status */}
       <View className="flex-row items-center justify-between px-4 py-4 border-b border-slate-100 dark:border-slate-800">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -139,7 +158,7 @@ const OrderDetailScreen: React.FC = () => {
         </Text>
         <TouchableOpacity
           onPress={() => {
-            /* Possible Share or Download function */
+            /* Placeholder for future export/share function */
           }}
           className="w-10 h-10 bg-slate-50 dark:bg-slate-800 rounded-full items-center justify-center"
         >
@@ -151,7 +170,7 @@ const OrderDetailScreen: React.FC = () => {
         className="flex-1 px-4 py-6"
         showsVerticalScrollIndicator={false}
       >
-        {/* Invoice Header */}
+        {/* Main Info Card (Top Section) */}
         <View className="mb-8 bg-indigo-600 rounded-2xl p-6 shadow-lg">
           <View className="flex-row justify-between items-start mb-4">
             <View>
@@ -188,7 +207,7 @@ const OrderDetailScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Items List */}
+        {/* Breakdown of items inside this order */}
         <View className="mb-8">
           <Text className="text-lg font-outfit-bold text-slate-900 dark:text-white mb-4">
             Items Purchased
@@ -222,7 +241,7 @@ const OrderDetailScreen: React.FC = () => {
           ))}
         </View>
 
-        {/* Pricing Breakdown */}
+        {/* Cost breakdown logic */}
         <View className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 mb-8">
           <View className="flex-row justify-between mb-2">
             <Text className="text-slate-600 dark:text-slate-400 font-outfit-medium">
@@ -257,7 +276,7 @@ const OrderDetailScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Shipping Info */}
+        {/* Shipping address details */}
         <View className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl p-4 mb-8">
           <View className="flex-row items-center mb-3">
             <Feather name="map-pin" size={18} color="#4F46E5" />
@@ -288,7 +307,7 @@ const OrderDetailScreen: React.FC = () => {
           </Text>
         </TouchableOpacity>
 
-        {/* Cancel Order Button - Only show if order is not already cancelled or delivered */}
+        {/* Cancel Order Button - Logic to only show when appropriate */}
         {orderStatus !== "Cancelled" && orderStatus !== "Delivered" && (
           <TouchableOpacity
             onPress={handleCancelOrder}
@@ -315,7 +334,7 @@ const OrderDetailScreen: React.FC = () => {
           </TouchableOpacity>
         )}
 
-        {/* Cancelled Badge */}
+        {/* Visual feedback if already cancelled */}
         {orderStatus === "Cancelled" && (
           <View className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-4">
             <View className="flex-row items-center">

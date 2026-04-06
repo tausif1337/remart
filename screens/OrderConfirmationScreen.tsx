@@ -15,12 +15,14 @@ import {
 } from "@react-navigation/native";
 import { RootStackParamList } from "../navigation/types";
 
+// Type definition for the route parameters passed from CheckoutScreen
 type OrderConfirmationRouteProp = RouteProp<
   RootStackParamList,
   "OrderConfirmation"
 >;
 type NavigationType = NavigationProp<RootStackParamList>;
 
+// Structure of the order information we expect to receive
 interface OrderDetails {
   orderId: string;
   transactionId: string;
@@ -42,11 +44,20 @@ interface OrderDetails {
   orderDate: string;
 }
 
+/**
+ * OrderConfirmationScreen is the final success page after a purchase.
+ * It summarizes what was bought and where it's being shipped.
+ */
 const OrderConfirmationScreen: React.FC = () => {
   const navigation = useNavigation<NavigationType>();
   const route = useRoute<OrderConfirmationRouteProp>();
+  
+  // Extracting order details passed from the previous screen (Checkout)
   const { orderDetails } = route.params as { orderDetails: OrderDetails };
 
+  /**
+   * Helper function to turn ISO date strings into readable text
+   */
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -63,7 +74,7 @@ const OrderConfirmationScreen: React.FC = () => {
         className="flex-1 px-4 py-6"
         contentContainerStyle={{ paddingBottom: 20 }}
       >
-        {/* Header */}
+        {/* Success Header with Icon */}
         <View className="mb-8 items-center">
           <View className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full items-center justify-center mb-4">
             <Feather name="check" size={40} color="#10B981" />
@@ -77,7 +88,7 @@ const OrderConfirmationScreen: React.FC = () => {
           </Text>
         </View>
 
-        {/* Order Summary Card */}
+        {/* Technical Order Details (IDs and Date) */}
         <View className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 mb-6">
           <Text className="text-lg font-outfit-bold text-slate-900 dark:text-white mb-4">
             Order Details
@@ -111,6 +122,7 @@ const OrderConfirmationScreen: React.FC = () => {
               </Text>
             </View>
 
+            {/* Final Amount Display */}
             <View className="flex-row justify-between pt-2 border-t border-slate-200 dark:border-slate-700">
               <Text className="text-lg font-outfit-bold text-slate-900 dark:text-white">
                 Total Amount:
@@ -122,7 +134,7 @@ const OrderConfirmationScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Items Summary */}
+        {/* List of Ordered Items */}
         <View className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 mb-6">
           <Text className="text-lg font-outfit-bold text-slate-900 dark:text-white mb-4">
             Order Items
@@ -148,7 +160,7 @@ const OrderConfirmationScreen: React.FC = () => {
           ))}
         </View>
 
-        {/* Customer Info */}
+        {/* Customer Basic Info */}
         <View className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 mb-6">
           <Text className="text-lg font-outfit-bold text-slate-900 dark:text-white mb-4">
             Customer Information
@@ -175,7 +187,7 @@ const OrderConfirmationScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Shipping Address */}
+        {/* Shipping Destination Summary */}
         <View className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 mb-8">
           <Text className="text-lg font-outfit-bold text-slate-900 dark:text-white mb-4">
             Shipping Address
@@ -196,7 +208,7 @@ const OrderConfirmationScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Action Buttons */}
+        {/* Primary Action Buttons */}
         <View className="space-y-4">
           <TouchableOpacity
             className="h-14 bg-indigo-600 rounded-xl items-center justify-center"
@@ -217,7 +229,7 @@ const OrderConfirmationScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Footer Note */}
+        {/* Footer Support/Info Note */}
         <View className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
           <View className="flex-row items-start">
             <Feather name="info" size={16} color="#3B82F6" className="mt-0.5" />

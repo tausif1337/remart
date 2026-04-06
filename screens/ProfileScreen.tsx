@@ -17,11 +17,23 @@ import { signOut } from "firebase/auth";
 import { auth } from "../utils/firebaseServices";
 import Toast from "react-native-toast-message";
 
+/**
+ * ProfileScreen displays user account information and links to order history,
+ * settings, and logout functionality.
+ */
 const ProfileScreen = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation<any>();
+  
+  // Accessing the logged-in user's data from the global Redux store
   const user = useSelector((state: RootState) => state.auth.user);
 
+  /**
+   * handleLogout:
+   * 1. Shows a confirmation alert.
+   * 2. Calls Firebase to end the session.
+   * 3. Clears the Redux store.
+   */
   const handleLogout = () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
       { text: "Cancel", style: "cancel" },
@@ -30,8 +42,8 @@ const ProfileScreen = () => {
         style: "destructive",
         onPress: async () => {
           try {
-            await signOut(auth);
-            dispatch(logoutAction());
+            await signOut(auth); // Firebase sign out
+            dispatch(logoutAction()); // Local state cleanup
             Toast.show({
               type: "info",
               text1: "Signed Out",
@@ -48,6 +60,7 @@ const ProfileScreen = () => {
   return (
     <SafeAreaView className="flex-1 bg-slate-50 dark:bg-slate-950">
       <ScrollView className="flex-1 px-6">
+        {/* User Identity Header */}
         <View className="items-center mt-12 mb-8">
           <View className="w-32 h-32 bg-indigo-100 dark:bg-indigo-900/30 rounded-full items-center justify-center mb-4 border-4 border-white dark:border-slate-800">
             <Feather name="user" size={64} color="#4F46E5" />
@@ -60,6 +73,7 @@ const ProfileScreen = () => {
           </Text>
         </View>
 
+        {/* Navigation Menu List */}
         <View className="bg-white dark:bg-slate-900 rounded-3xl p-2 mb-8 shadow-sm">
           <ProfileMenuItem
             icon="shopping-bag"
@@ -76,6 +90,7 @@ const ProfileScreen = () => {
           <ProfileMenuItem icon="settings" title="Settings" />
         </View>
 
+        {/* Sign Out Button Section */}
         <TouchableOpacity
           onPress={handleLogout}
           className="flex-row items-center justify-center p-4 bg-red-50 dark:bg-red-900/10 rounded-2xl mb-12"
@@ -88,6 +103,10 @@ const ProfileScreen = () => {
   );
 };
 
+/**
+ * Reusable component for profile menu rows.
+ * This keeps the main ProfileScreen clean and maintainable.
+ */
 const ProfileMenuItem = ({
   icon,
   title,

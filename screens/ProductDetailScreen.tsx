@@ -31,26 +31,36 @@ type NavigationProp = NativeStackNavigationProp<
   "ProductDetail"
 >;
 
+/**
+ * ProductDetailScreen shows extensive info for a single item.
+ * It fetches both the product details and customer reviews from Firebase.
+ */
 export default function ProductDetailScreen() {
   const route = useRoute<ProductDetailRouteProp>();
   const navigation = useNavigation<NavigationProp>();
+  
+  // The unique ID of the product we are looking at
   const { productId } = route.params;
   const { width } = useWindowDimensions();
   const dispatch = useDispatch();
 
-  // Get reviews from the Redux store
+  // Redux state for reviews (if needed globally)
   const reviews = useSelector((state: any) => state.cart.reviews);
 
+  // Local state for the specific product and its reviews
   const [product, setProduct] = useState<Product | null>(null);
   const [productReviews, setProductReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // States for user interaction (how many to buy and which info tab to show)
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<"Description" | "Specs">(
     "Description"
   );
 
-  // Fetch product details and reviews from Firebase
+  /**
+   * Fetches product details and reviews simultaneously using Promise.all
+   */
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -70,6 +80,7 @@ export default function ProductDetailScreen() {
     fetchData();
   }, [productId]);
 
+  // Loading indicator for UX
   if (loading) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-white dark:bg-slate-950">
@@ -81,6 +92,7 @@ export default function ProductDetailScreen() {
     );
   }
 
+  // Error handling if product doesn't exist
   if (!product) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-white dark:bg-slate-950">
@@ -97,10 +109,14 @@ export default function ProductDetailScreen() {
     );
   }
 
+  /**
+   * Logic to add the currently viewed product to the cart.
+   * Includes validation checks for stock levels.
+   */
   const handleAddToCart = () => {
     console.log("[DEBUG] Adding to cart - Product:", product.name, "Quantity:", quantity, "Stock:", product.stock);
     
-    // Check if product has stock defined and if there's enough stock
+    // Check if product is completely sold out
     if (product.stock !== undefined && product.stock <= 0) {
       Toast.show({
         type: "error",
@@ -111,6 +127,7 @@ export default function ProductDetailScreen() {
       return;
     }
 
+    // Check if user is trying to buy more than we have
     if (product.stock !== undefined && quantity > product.stock) {
       Toast.show({
         type: "error",
@@ -121,6 +138,7 @@ export default function ProductDetailScreen() {
       return;
     }
 
+    // Call Redux action
     dispatch(addToCart({ product, quantity }));
     Toast.show({
       type: "success",
@@ -141,7 +159,7 @@ export default function ProductDetailScreen() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 120 }}
       >
-        {/* Product Image Header */}
+        {/* Large Product Image Header */}
         <View className="relative">
           <Image
             source={{ uri: product.image }}
@@ -150,19 +168,22 @@ export default function ProductDetailScreen() {
             resizeMode="cover"
           />
           <View className="absolute top-12 left-6 right-6 flex-row justify-between">
+            {/* Custom Back Button */}
             <TouchableOpacity
               onPress={() => navigation.goBack()}
               className="w-10 h-10 bg-white/90 dark:bg-slate-900/90 rounded-full items-center justify-center"
             >
               <Feather name="chevron-left" size={24} color="#1E293B" />
             </TouchableOpacity>
+            {/* Bag Icon with dynamic badge count */}
             <CartIconWithBadge onPress={navigateToCart} />
           </View>
 
+          {/* Curved overlap effect for the content */}
           <View className="absolute bottom-0 left-0 right-0 h-12 bg-white dark:bg-slate-950 rounded-t-[40px]" />
         </View>
 
-        {/* Product Title & Price */}
+        {/* Pricing and Basic Title Info */}
         <View className="px-6 -mt-4">
           <View className="flex-row justify-between items-start">
             <View className="flex-1 mr-4">
@@ -180,6 +201,7 @@ export default function ProductDetailScreen() {
             </View>
           </View>
 
+          {/* Rating Summary */}
           <View className="flex-row items-center mt-4">
             <View className="flex-row items-center bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded-lg mr-4">
               <Feather name="star" size={14} color="#F59E0B" />
@@ -192,7 +214,7 @@ export default function ProductDetailScreen() {
             </Text>
           </View>
 
-          {/* Stock Status Badge */}
+          {/* Dynamic Stock Status Message */}
           {product.stock !== undefined && (
             <View className="mt-4">
               {product.stock === 0 ? (
@@ -220,7 +242,7 @@ export default function ProductDetailScreen() {
             </View>
           )}
 
-          {/* Quantity Selector */}
+          {/* Plus/Minus Quantity UI */}
           <View className="mt-8">
             <Text className="text-sm font-outfit-bold text-slate-900 dark:text-white mb-3">
               Quantity
@@ -262,7 +284,7 @@ export default function ProductDetailScreen() {
             </View>
           </View>
 
-          {/* Tabs */}
+          {/* Info Tabs: Switching between Description and Technical Specs */}
           <View className="mt-8 border-b border-slate-100 dark:border-slate-800 flex-row">
             {["Description", "Specs"].map((tab) => (
               <TouchableOpacity
@@ -310,11 +332,11 @@ export default function ProductDetailScreen() {
           </View>
         </View>
 
-        {/* Reviews Section */}
+        {/* Modular Reviews Component */}
         <ReviewSection reviews={productReviews} />
       </ScrollView>
 
-      {/* Bottom Bar */}
+      {/* Floating Bottom Bar with Total Price and Add Button */}
       <View className="absolute bottom-0 left-0 right-0 bg-white/80 dark:bg-slate-950/80 px-6 py-8 border-t border-slate-100 dark:border-slate-800">
         <View className="flex-row items-center">
           <View className="flex-1">

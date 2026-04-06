@@ -7,6 +7,19 @@ import { addToCart } from "../store/cartSlice";
 import { toggleWishlist } from "../store/wishlistSlice";
 import { Product } from "../store/types";
 
+/**
+ * ProductCard — Grid Item for the Product Listing Page
+ *
+ * Renders a single product card with its image, name, price,
+ * a wishlist heart toggle, and a quick "add to cart" button.
+ *
+ * Pressing the card body navigates to the product detail page.
+ * This component connects to Redux for both cart and wishlist actions.
+ *
+ * Props:
+ * - product: The product data to display
+ * - onPress: Callback called with the product when the card is tapped
+ */
 interface ProductCardProps {
   product: Product;
   onPress: (product: Product) => void;
@@ -14,9 +27,12 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, onPress }: ProductCardProps) {
   const dispatch = useDispatch();
+
+  // Read the wishlist from Redux to determine if this product is already saved
   const wishlist = useSelector((state: any) => state.wishlist.items);
   const isWishlisted = wishlist.some((item: Product) => item.id === product.id);
 
+  /** Quick-add: Always adds 1 of this product to the cart */
   const handleAddToCart = () => {
     dispatch(addToCart({ product, quantity: 1 }));
     Toast.show({
@@ -27,6 +43,11 @@ export default function ProductCard({ product, onPress }: ProductCardProps) {
     });
   };
 
+  /**
+   * toggleWishlist action: If the product IS wishlisted → remove it.
+   * If it's NOT → add it. The toast message adjusts based on current state.
+   * Note: isWishlisted is read BEFORE the toggle, so logic is inverted.
+   */
   const handleToggleWishlist = () => {
     dispatch(toggleWishlist(product));
     Toast.show({
@@ -40,6 +61,7 @@ export default function ProductCard({ product, onPress }: ProductCardProps) {
   };
 
   return (
+    // Pressable is used for the whole card (navigate to detail page)
     <Pressable
       onPress={() => onPress(product)}
       className="flex-1 m-2 mb-6 bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800"
@@ -60,7 +82,7 @@ export default function ProductCard({ product, onPress }: ProductCardProps) {
           </Text>
         </View>
 
-        {/* Favorite Button - Glassmorphism */}
+        {/* Heart Button — Color changes based on isWishlisted */}
         <TouchableOpacity
           className="absolute top-3 right-3 w-8 h-8 bg-white/90 dark:bg-black/60 rounded-full items-center justify-center"
           onPress={handleToggleWishlist}
@@ -68,7 +90,7 @@ export default function ProductCard({ product, onPress }: ProductCardProps) {
           <Feather
             name="heart"
             size={16}
-            color={isWishlisted ? "#EF4444" : "#94A3B8"}
+            color={isWishlisted ? "#EF4444" : "#94A3B8"} // Red if wishlisted, gray otherwise
             fill={isWishlisted ? "#EF4444" : "none"}
           />
         </TouchableOpacity>
@@ -78,9 +100,11 @@ export default function ProductCard({ product, onPress }: ProductCardProps) {
       <View className="p-4 pt-3">
         <View className="flex-row justify-between items-start">
           <View className="flex-1 mr-2">
+            {/* Category label */}
             <Text className="text-[10px] font-outfit-bold text-indigo-500 uppercase mb-1">
               {product.category}
             </Text>
+            {/* Product Name — capped at 1 line with ellipsis */}
             <Text
               numberOfLines={1}
               className="text-base font-outfit-bold text-slate-900 dark:text-white leading-tight"
@@ -91,10 +115,12 @@ export default function ProductCard({ product, onPress }: ProductCardProps) {
         </View>
 
         <View className="flex-row items-center justify-between mt-3">
+          {/* Price Display */}
           <Text className="text-lg font-outfit-black text-slate-900 dark:text-white">
             ৳{product.price}
           </Text>
 
+          {/* Quick Add-to-Cart Button (+ icon) */}
           <TouchableOpacity
             className="bg-slate-900 dark:bg-white w-8 h-8 items-center justify-center rounded-full"
             onPress={handleAddToCart}
@@ -106,3 +132,4 @@ export default function ProductCard({ product, onPress }: ProductCardProps) {
     </Pressable>
   );
 }
+

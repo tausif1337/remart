@@ -21,36 +21,46 @@ import SearchBar from "../components/SearchBar";
 import CategoryFilter from "../components/CategoryFilter";
 import { getProducts, seedDatabase } from "../utils/firebaseServices";
 
+// Static categories for the filter bar
 const CATEGORIES = ["All", "electronics", "furniture", "fashion", "decoration"];
 
+// Type definition for navigation that works across both stacks (Tab and Root)
 type NavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabParamList, "Home">,
   NativeStackNavigationProp<RootStackParamList>
 >;
 
+/**
+ * ProductListingScreen is the main browse page of the app.
+ * It lists all products from Firestore with search and category filtering.
+ */
 export default function ProductListingScreen() {
   const navigation = useNavigation<NavigationProp>();
 
+  // State hooks for data and UI control
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  
+  // Hook to get screen dimensions for making the grid responsive
   const { width } = useWindowDimensions();
 
-  // Fetch products from Firebase
+  /**
+   * Fetches products from Firebase on initial load.
+   * If the database is empty, it automatically runs the seed function to populate it.
+   */
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const fetchedProducts = await getProducts();
 
-        // If no products found, offer to seed or auto-seed
+        // Check if database needs sample data
         if (fetchedProducts.length === 0) {
           console.log("No products found in Firestore. Seeding database...");
           const seedResult = await seedDatabase();
           if (seedResult.success) {
-            console.log(
-              "Database seeded successfully. Re-fetching products..."
-            );
+            console.log("Database seeded successfully. Re-fetching products...");
             const reFetchedProducts = await getProducts();
             setProducts(reFetchedProducts as Product[]);
           } else {
@@ -69,17 +79,28 @@ export default function ProductListingScreen() {
     fetchProducts();
   }, []);
 
-  // Responsive column calculation
+  /**
+   * Responsive column calculation:
+   * Decides how many products to show per row based on screen width.
+   */
   const numColumns = width > 1024 ? 4 : width > 768 ? 3 : 2;
   const contentPadding = width > 768 ? 32 : 24;
 
+  /**
+   * Optimized Filtering:
+   * useMemo ensures filtering only runs when dependencies actually change,
+   * saving performance on every render.
+   */
   const filteredProducts = useMemo(() => {
     return products.filter((product: Product) => {
+      // Logic for search match
       const matchesSearch = product.name
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
+      // Logic for category match
       const matchesCategory =
         selectedCategory === "All" || product.category === selectedCategory;
+      
       return matchesSearch && matchesCategory;
     });
   }, [products, searchQuery, selectedCategory]);
@@ -98,7 +119,7 @@ export default function ProductListingScreen() {
         className="flex-1 w-full self-center"
         style={{ paddingHorizontal: contentPadding }}
       >
-        {/* Header Section */}
+        {/* Header Section with Brand and Global Badges */}
         <View className="flex-row justify-between items-center mb-8 mt-4">
           <View>
             <Image
@@ -114,7 +135,7 @@ export default function ProductListingScreen() {
           </View>
         </View>
 
-        {/* Search & Filter */}
+        {/* Input Controls */}
         <SearchBar
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -126,9 +147,9 @@ export default function ProductListingScreen() {
           onSelectCategory={setSelectedCategory}
         />
 
-        {/* Product Grid */}
+        {/* The Product Grid using FlatList */}
         <FlatList
-          key={numColumns.toString()} // Force re-render when columns change
+          key={numColumns.toString()} // IMP: Changing key forces a complete unmount/remount when columns change (essential for numColumns)
           data={filteredProducts}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
@@ -142,6 +163,8 @@ export default function ProductListingScreen() {
           numColumns={numColumns}
           contentContainerStyle={{ paddingBottom: 120, paddingTop: 8 }}
           columnWrapperStyle={{ gap: 16 }}
+          
+          // Show spinner or "Nothing Found" UI when list is empty
           ListEmptyComponent={
             loading ? (
               <View className="flex-1 items-center justify-center py-24">
@@ -164,6 +187,8 @@ export default function ProductListingScreen() {
               </View>
             )
           }
+          
+          // Pull-to-refresh logic to see new inventory
           refreshing={loading}
           onRefresh={() => {
             const fetchProducts = async () => {

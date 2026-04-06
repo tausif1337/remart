@@ -18,21 +18,31 @@ import Toast from "react-native-toast-message";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
+/**
+ * ForgotPasswordScreen allows users to request a password reset link.
+ * It uses Firebase Authentication's sendPasswordResetEmail method.
+ */
 const ForgotPasswordScreen = () => {
   const navigation = useNavigation<NavigationProp>();
 
+  // State management for form input and UI feedback
   const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
+  const [loading, setLoading] = useState(false); // Shows spinner during API call
+  const [emailSent, setEmailSent] = useState(false); // Controls which UI to show (request vs success)
 
+  // Simple regex to validate email format
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
+  /**
+   * Triggers the Firebase password reset email
+   */
   const handleResetPassword = async () => {
     console.log("[DEBUG] Forgot password initiated for email:", email);
 
+    // Basic validation checks before calling the API
     if (!email.trim()) {
       Toast.show({
         type: "error",
@@ -53,10 +63,11 @@ const ForgotPasswordScreen = () => {
 
     setLoading(true);
     try {
+      // Firebase build-in function to send the reset email
       await sendPasswordResetEmail(auth, email);
       console.log("[DEBUG] Password reset email sent successfully to:", email);
       
-      setEmailSent(true);
+      setEmailSent(true); // Switch UI to success state
       Toast.show({
         type: "success",
         text1: "Email Sent!",
@@ -65,6 +76,7 @@ const ForgotPasswordScreen = () => {
     } catch (error: any) {
       console.error("[ERROR] Password reset failed:", error);
       
+      // Map Firebase error codes to user-friendly messages
       let errorMessage = "An unexpected error occurred";
       if (error.code === "auth/user-not-found") {
         errorMessage = "No account found with this email address";
@@ -91,6 +103,7 @@ const ForgotPasswordScreen = () => {
         className="px-6 py-12"
         keyboardShouldPersistTaps="handled"
       >
+        {/* Back Button */}
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           className="w-12 h-12 bg-white dark:bg-slate-800 rounded-full items-center justify-center mb-8 shadow-sm"
@@ -98,6 +111,7 @@ const ForgotPasswordScreen = () => {
           <Feather name="chevron-left" size={24} color="#4F46E5" />
         </TouchableOpacity>
 
+        {/* Phase 1: Requesting the link */}
         {!emailSent ? (
           <>
             <View className="w-20 h-20 bg-indigo-100 dark:bg-indigo-900/30 rounded-full items-center justify-center mb-6 self-start">
@@ -156,6 +170,7 @@ const ForgotPasswordScreen = () => {
             </View>
           </>
         ) : (
+          /* Phase 2: Success state after email is sent */
           <>
             <View className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full items-center justify-center mb-6 self-center">
               <Feather name="check" size={40} color="#10B981" />
@@ -171,6 +186,7 @@ const ForgotPasswordScreen = () => {
               </Text>
             </Text>
 
+            {/* Informational Help Box */}
             <View className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-4 mb-8">
               <View className="flex-row items-start">
                 <Feather name="info" size={20} color="#3B82F6" className="mt-0.5" />
@@ -191,7 +207,7 @@ const ForgotPasswordScreen = () => {
 
             <TouchableOpacity
               onPress={() => {
-                setEmailSent(false);
+                setEmailSent(false); // Go back to request form
                 setEmail("");
               }}
               className="h-16 border-2 border-slate-200 dark:border-slate-800 rounded-2xl items-center justify-center"

@@ -14,13 +14,24 @@ import { useSelector } from "react-redux";
 import { getUserOrders } from "../utils/firebaseServices";
 import { RootStackParamList } from "../navigation/types";
 
+/**
+ * OrderHistoryScreen displays a list of all past orders for the logged-in user.
+ * It uses Firebase to fetch real-time order data.
+ */
 const OrderHistoryScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  
+  // Retrieve the current user from global Redux state
   const user = useSelector((state: any) => state.auth.user);
+  
+  // Local state for order data and loading indicators
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const [refreshing, setRefreshing] = useState(false); // For pull-to-refresh
 
+  /**
+   * Fetches user's specific order documents from Firebase
+   */
   const fetchOrders = async () => {
     if (!user) return;
     setLoading(true);
@@ -29,6 +40,9 @@ const OrderHistoryScreen: React.FC = () => {
     setLoading(false);
   };
 
+  /**
+   * Action triggered when user pulls the list down (RefreshControl)
+   */
   const onRefresh = async () => {
     setRefreshing(true);
     if (user) {
@@ -38,10 +52,14 @@ const OrderHistoryScreen: React.FC = () => {
     setRefreshing(false);
   };
 
+  // Re-fetch orders whenever the component mounts or user changes
   useEffect(() => {
     fetchOrders();
   }, [user]);
 
+  /**
+   * Helper to format order date for display
+   */
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -50,6 +68,9 @@ const OrderHistoryScreen: React.FC = () => {
     });
   };
 
+  /**
+   * Component for a single order row in the list
+   */
   const renderOrderItem = ({ item }: { item: any }) => (
     <TouchableOpacity
       onPress={() => navigation.navigate("OrderDetail", { order: item })}
@@ -59,6 +80,8 @@ const OrderHistoryScreen: React.FC = () => {
         <Text className="text-sm font-outfit-bold text-slate-500 dark:text-slate-400">
           Order #{item.orderId || item.id.slice(0, 8).toUpperCase()}
         </Text>
+        
+        {/* Dynamic Badge styling based on Order Status */}
         <View
           className={`px-2 py-1 rounded-full ${
             item.status === "Delivered"
@@ -86,6 +109,7 @@ const OrderHistoryScreen: React.FC = () => {
         ৳{item.amount.toFixed(2)}
       </Text>
 
+      {/* Date and Item Count Footer */}
       <View className="flex-row justify-between items-center">
         <View className="flex-row items-center">
           <Feather name="calendar" size={14} color="#64748B" />
@@ -105,6 +129,7 @@ const OrderHistoryScreen: React.FC = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50 dark:bg-slate-900">
+      {/* Custom Header */}
       <View className="flex-row items-center px-4 py-4">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -117,7 +142,9 @@ const OrderHistoryScreen: React.FC = () => {
         </Text>
       </View>
 
+      {/* Main content area */}
       {loading && !refreshing ? (
+        // Spinner for initial data load
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#4F46E5" />
         </View>
@@ -127,6 +154,7 @@ const OrderHistoryScreen: React.FC = () => {
           renderItem={renderOrderItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 16 }}
+          // Pull-to-refresh logic
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -134,6 +162,7 @@ const OrderHistoryScreen: React.FC = () => {
               colors={["#4F46E5"]}
             />
           }
+          // Empty State UI
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center py-20">
               <View className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full items-center justify-center mb-4">

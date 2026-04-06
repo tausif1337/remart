@@ -11,22 +11,35 @@ import ConfirmationModal from "../components/ConfirmationModal";
 import { RootStackParamList } from "../navigation/types";
 import { NavigationProp } from "@react-navigation/native";
 
+/**
+ * CartScreen displays all items added to the shopping cart.
+ * Users can increase/decrease quantities, remove items, and see the total price.
+ */
 const CartScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const dispatch = useDispatch();
+  
+  // Get cart data from Redux global state
   const cart = useSelector((state: any) => state.cart.cart);
 
+  // States for handling the "Remove Item" confirmation pop-up
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [itemToRemove, setItemToRemove] = useState<string | null>(null);
 
+  /**
+   * Opens the confirmation modal before actually removing an item
+   */
   const handleRemoveItem = (productId: string) => {
     setItemToRemove(productId);
     setShowConfirmation(true);
   };
 
+  /**
+   * Logic executed after user confirms they want to remove the item
+   */
   const confirmRemoveItem = () => {
     if (itemToRemove) {
-      dispatch(removeFromCart(itemToRemove));
+      dispatch(removeFromCart(itemToRemove)); // Update Redux state
       Toast.show({
         type: "success",
         text1: "Item Removed",
@@ -43,6 +56,10 @@ const CartScreen: React.FC = () => {
     setItemToRemove(null);
   };
 
+  /**
+   * Updates item quantity. 
+   * If quantity drops below 1, it automatically removes the item.
+   */
   const handleUpdateQuantity = (productId: string, quantity: number) => {
     if (quantity < 1) {
       dispatch(removeFromCart(productId));
@@ -63,6 +80,9 @@ const CartScreen: React.FC = () => {
     }
   };
 
+  /**
+   * Calculates the sum of (price * quantity) for all items
+   */
   const calculateTotal = () => {
     return cart.reduce(
       (total: number, item: CartItem) => total + item.price * item.quantity,
@@ -70,12 +90,17 @@ const CartScreen: React.FC = () => {
     );
   };
 
+  /**
+   * Component to render each individual item in the list
+   */
   const renderCartItem = ({ item }: { item: CartItem }) => (
     <View className="flex-row items-center p-4 mb-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
+      {/* Product Image */}
       <Image
         source={{ uri: item.image }}
         className="w-16 h-16 rounded-lg mr-4"
       />
+      
       <View className="flex-1">
         <Text className="text-base font-outfit-bold text-slate-900 dark:text-white">
           {item.name}
@@ -83,6 +108,8 @@ const CartScreen: React.FC = () => {
         <Text className="text-indigo-600 dark:text-indigo-400 font-outfit-bold">
           ৳{item.price.toFixed(2)}
         </Text>
+        
+        {/* Quantity Controls */}
         <View className="flex-row items-center mt-2">
           <TouchableOpacity
             onPress={() => handleUpdateQuantity(item.id, item.quantity - 1)}
@@ -101,6 +128,8 @@ const CartScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Remove Button */}
       <TouchableOpacity
         onPress={() => handleRemoveItem(item.id)}
         className="ml-4 p-2"
@@ -113,6 +142,7 @@ const CartScreen: React.FC = () => {
   return (
     <SafeAreaView className="flex-1 bg-slate-50 dark:bg-slate-900 p-4">
       <View className="flex-1">
+        {/* Header with Back Button */}
         <View className="flex-row items-center justify-between mb-6">
           <TouchableOpacity
             onPress={() => navigation.goBack()}
@@ -130,6 +160,7 @@ const CartScreen: React.FC = () => {
           </View>
         </View>
 
+        {/* Conditional Rendering: Empty State vs List */}
         {cart.length === 0 ? (
           <View className="flex-1 items-center justify-center">
             <View className="w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-full items-center justify-center mb-4">
@@ -151,6 +182,7 @@ const CartScreen: React.FC = () => {
               showsVerticalScrollIndicator={false}
             />
 
+            {/* Price Summary and Checkout Footer */}
             <View className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 mt-auto">
               <View className="flex-row justify-between items-center mb-2">
                 <Text className="text-lg font-outfit-bold text-slate-900 dark:text-white">
@@ -174,6 +206,8 @@ const CartScreen: React.FC = () => {
           </>
         )}
       </View>
+
+      {/* Pop-up modal for removal confirmation */}
       <ConfirmationModal
         visible={showConfirmation}
         onClose={cancelRemoveItem}

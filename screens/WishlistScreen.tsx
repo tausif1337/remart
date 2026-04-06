@@ -16,11 +16,20 @@ import { removeFromWishlist, toggleWishlist } from "../store/wishlistSlice";
 import { Product } from "../store/types";
 import { RootStackParamList } from "../navigation/types";
 
+/**
+ * WishlistScreen displays the list of user's favorite products.
+ * It reads from the Redux wishlist slice and allows users to remove items.
+ */
 const WishlistScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const dispatch = useDispatch();
+  
+  // Pulling the list of items from the global Redux state (Wishlist)
   const wishlist = useSelector((state: any) => state.wishlist.items);
 
+  /**
+   * Action to remove an item permanently from the wishlist
+   */
   const handleRemoveFromWishlist = (product: Product) => {
     dispatch(removeFromWishlist(product.id));
     Toast.show({
@@ -31,6 +40,10 @@ const WishlistScreen: React.FC = () => {
     });
   };
 
+  /**
+   * Logic to either add or remove an item (Toggle)
+   * This handles the heart icon toggle behavior.
+   */
   const handleToggleWishlist = (product: Product) => {
     dispatch(toggleWishlist(product));
     const isWishlisted = wishlist.some(
@@ -50,8 +63,12 @@ const WishlistScreen: React.FC = () => {
     navigation.navigate("ProductDetail", { productId: product.id });
   };
 
+  /**
+   * Component for a single wishlist row item
+   */
   const renderWishlistItem = ({ item }: { item: Product }) => (
     <View className="flex-row items-center p-4 mb-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
+      {/* Product Image Thumbnail */}
       <TouchableOpacity
         onPress={() => handleProductPress(item)}
         className="w-16 h-16 bg-slate-50 dark:bg-slate-700 rounded-lg mr-4 overflow-hidden"
@@ -62,6 +79,8 @@ const WishlistScreen: React.FC = () => {
           resizeMode="cover"
         />
       </TouchableOpacity>
+      
+      {/* Product Labels and Navigation */}
       <View className="flex-1">
         <TouchableOpacity onPress={() => handleProductPress(item)}>
           <Text className="text-base font-outfit-bold text-slate-900 dark:text-white">
@@ -73,6 +92,8 @@ const WishlistScreen: React.FC = () => {
           <Text className="text-xs text-slate-500 mt-1">{item.category}</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Control Buttons (Favorite and Garbage) */}
       <View className="flex-row items-center">
         <TouchableOpacity
           onPress={() => handleToggleWishlist(item)}
@@ -93,6 +114,7 @@ const WishlistScreen: React.FC = () => {
   return (
     <SafeAreaView className="flex-1 bg-slate-50 dark:bg-slate-900 p-4">
       <View className="flex-1">
+        {/* Screen Header */}
         <View className="flex-row items-center justify-between mb-6">
           <TouchableOpacity
             onPress={() => navigation.goBack()}
@@ -110,6 +132,7 @@ const WishlistScreen: React.FC = () => {
           </View>
         </View>
 
+        {/* Empty State UI */}
         {wishlist.length === 0 ? (
           <View className="flex-1 items-center justify-center">
             <View className="w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-full items-center justify-center mb-4">
@@ -123,6 +146,7 @@ const WishlistScreen: React.FC = () => {
             </Text>
           </View>
         ) : (
+          /* Main Wishlist Feed */
           <FlatList
             data={wishlist}
             renderItem={renderWishlistItem}

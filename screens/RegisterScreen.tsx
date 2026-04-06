@@ -21,17 +21,26 @@ import Toast from "react-native-toast-message";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
+/**
+ * RegisterScreen handles the creation of new user accounts.
+ * It uses Firebase's email/password authentication and updates the local Redux state.
+ */
 const RegisterScreen = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation<NavigationProp>();
 
+  // State hooks for registration form
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // Toggle visibility
 
+  /**
+   * Main registration handler
+   */
   const handleRegister = async () => {
+    // Check if user filled everything
     if (!fullName || !email || !password) {
       Toast.show({
         type: "error",
@@ -43,6 +52,7 @@ const RegisterScreen = () => {
 
     setLoading(true);
     try {
+      // Step 1: Create the user account in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -50,10 +60,12 @@ const RegisterScreen = () => {
       );
       const user = userCredential.user;
 
+      // Step 2: Attach the Full Name to the user's Firebase profile
       await updateProfile(user, {
         displayName: fullName,
       });
 
+      // Step 3: Update our global app state (Redux)
       dispatch(
         setUser({
           id: user.uid,
@@ -68,6 +80,7 @@ const RegisterScreen = () => {
         text2: `Welcome to Remart, ${fullName}!`,
       });
 
+      // Navigate back (usually to the Checkout or Account screen)
       navigation.goBack();
     } catch (error: any) {
       console.error("Registration error:", error);
@@ -88,6 +101,7 @@ const RegisterScreen = () => {
         className="px-6 py-12"
         keyboardShouldPersistTaps="handled"
       >
+        {/* Navigation header */}
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           className="w-12 h-12 bg-white dark:bg-slate-800 rounded-full items-center justify-center mb-8 shadow-sm"
@@ -95,6 +109,7 @@ const RegisterScreen = () => {
           <Feather name="chevron-left" size={24} color="#4F46E5" />
         </TouchableOpacity>
 
+        {/* Branding */}
         <View className="items-center mb-8">
           <Image
             source={require("../assets/remart-logo.png")}
@@ -111,6 +126,7 @@ const RegisterScreen = () => {
         </Text>
 
         <View className="space-y-4">
+          {/* Full Name Input */}
           <View className="mb-4">
             <Text className="text-sm font-outfit-bold text-slate-700 dark:text-slate-300 mb-2">
               Full Name
@@ -127,6 +143,7 @@ const RegisterScreen = () => {
             </View>
           </View>
 
+          {/* Email Input */}
           <View className="mb-4">
             <Text className="text-sm font-outfit-bold text-slate-700 dark:text-slate-300 mb-2">
               Email Address
@@ -145,6 +162,7 @@ const RegisterScreen = () => {
             </View>
           </View>
 
+          {/* Password Input with eye toggle */}
           <View className="mb-8">
             <Text className="text-sm font-outfit-bold text-slate-700 dark:text-slate-300 mb-2">
               Password
@@ -157,7 +175,7 @@ const RegisterScreen = () => {
                 placeholderTextColor="#94A3B8"
                 value={password}
                 onChangeText={setPassword}
-                secureTextEntry={!showPassword}
+                secureTextEntry={!showPassword} // Hide text by default
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                 <Feather
@@ -170,6 +188,7 @@ const RegisterScreen = () => {
           </View>
         </View>
 
+        {/* Action Button */}
         <TouchableOpacity
           onPress={handleRegister}
           disabled={loading}
@@ -184,6 +203,7 @@ const RegisterScreen = () => {
           )}
         </TouchableOpacity>
 
+        {/* Footer Navigation Link */}
         <View className="flex-row justify-center mt-8">
           <Text className="text-slate-500 font-outfit-regular">
             Already have an account?{" "}

@@ -1,6 +1,18 @@
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import React from "react";
 
+/**
+ * CategoryFilter — Horizontal Scrollable Category Pills
+ *
+ * Renders a row of pill-shaped buttons, one per category.
+ * The currently selected category is highlighted in indigo.
+ * Tapping a pill calls onSelectCategory to update the parent's state.
+ *
+ * Props:
+ * - categories: Array of category strings (e.g. ["All", "Electronics"])
+ * - selectedCategory: The currently active filter
+ * - onSelectCategory: Callback to update the selected category in the parent
+ */
 interface CategoryFilterProps {
   categories: string[];
   selectedCategory: string;
@@ -14,6 +26,7 @@ export default function CategoryFilter({
 }: CategoryFilterProps) {
   return (
     <View className="mb-6">
+      {/* Horizontal scroll so all categories are accessible on small screens */}
       <ScrollView
         horizontal={true}
         showsHorizontalScrollIndicator={false}
@@ -26,6 +39,7 @@ export default function CategoryFilter({
               activeOpacity={0.7}
               key={index}
               onPress={() => onSelectCategory(category)}
+              // Conditionally apply active (indigo) or inactive (white/dark) styles
               className={`px-5 py-2.5 rounded-full border shadow-sm ${
                 isSelected
                   ? "bg-indigo-600 border-indigo-600"
@@ -48,3 +62,4 @@ export default function CategoryFilter({
     </View>
   );
 }
+

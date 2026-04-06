@@ -9,23 +9,44 @@ import Animated, {
   interpolate,
 } from "react-native-reanimated";
 
+/**
+ * SplashScreenComponent — Animated App Launch Screen
+ *
+ * Shown while the app is starting up (before the auth state is loaded).
+ * Uses react-native-reanimated for smooth entry animations.
+ *
+ * Animation flow:
+ * 1. Background fades in (opacity 0 → 1)
+ * 2. Image scales up (0.9 → 1.0) with an exponential easing curve
+ * 3. Logo simultaneously fades in over 1.2 seconds
+ */
+
+// Get the full screen dimensions to cover the entire display
 const { width, height } = Dimensions.get("window");
 
 const SplashScreenComponent: React.FC = () => {
-  const logoScale = useSharedValue(0.9);
-  const logoOpacity = useSharedValue(0);
-  const backgroundOpacity = useSharedValue(0);
+  /**
+   * useSharedValue: A special Reanimated hook for animatable values.
+   * These live on the UI thread for smooth, non-blocking animations.
+   */
+  const logoScale = useSharedValue(0.9);        // Start slightly scaled down
+  const logoOpacity = useSharedValue(0);         // Start invisible
+  const backgroundOpacity = useSharedValue(0);   // Start invisible
 
   useEffect(() => {
-    // Start animations
-    backgroundOpacity.value = withTiming(1, { duration: 1000 });
-    logoScale.value = withTiming(1, { 
-      duration: 1500, 
-      easing: Easing.out(Easing.exp) 
+    // Trigger all animations simultaneously when the component mounts
+    backgroundOpacity.value = withTiming(1, { duration: 1000 });      // Fade in over 1 sec
+    logoScale.value = withTiming(1, {
+      duration: 1500,
+      easing: Easing.out(Easing.exp), // Exponential easing = fast at start, slows down at end
     });
-    logoOpacity.value = withTiming(1, { duration: 1200 });
+    logoOpacity.value = withTiming(1, { duration: 1200 }); // Fade in over 1.2 sec
   }, []);
 
+  /**
+   * useAnimatedStyle: Maps shared values to React Native style props.
+   * This style updates automatically whenever the shared values change.
+   */
   const animatedBackgroundStyle = useAnimatedStyle(() => {
     return {
       opacity: backgroundOpacity.value,
@@ -35,16 +56,20 @@ const SplashScreenComponent: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      {/* Make status bar transparent so splash image shows behind it */}
       <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
-      
-      {/* Background Image - The full splash screen design */}
+
+      {/* Background Image — The full splash screen design with animation applied */}
       <Animated.Image
         source={require("../assets/remart-splash-screen.png")}
         style={[styles.backgroundImage, animatedBackgroundStyle]}
         resizeMode="cover"
       />
 
-      {/* Optionally overlay the logo for more control over animation */}
+      {/* 
+        Optional: Overlay logo for precise animation control.
+        Currently commented out, but shows the pattern if needed.
+      */}
       {/* 
       <View style={styles.logoContainer}>
         <Animated.Image
@@ -66,8 +91,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   backgroundImage: {
-    width: width,
-    height: height,
+    width: width,   // Cover full screen width
+    height: height, // Cover full screen height
     position: "absolute",
   },
   logoContainer: {
@@ -83,3 +108,4 @@ const styles = StyleSheet.create({
 });
 
 export default SplashScreenComponent;
+
